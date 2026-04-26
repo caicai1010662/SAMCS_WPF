@@ -1,0 +1,7 @@
+# Visual Studio 忽略文件
+.vs/
+[Bb]in/
+[Ob]j/
+*.user
+*.suo
+*.pdb

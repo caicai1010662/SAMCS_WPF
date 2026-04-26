@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="MyRobotSDK/MyRobotSDK.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SAMCS.UI/SAMCS.UI.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>

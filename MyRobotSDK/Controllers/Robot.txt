@@ -1,0 +1,18 @@
+/// <summary>
+        /// 连接控制器。
+        /// （1）串口连接时，使用 Modbus-RTU，“COM口+波特率”，COM5 + 115200。
+        /// （2）网络连接时，使用 Modbus-TCP，“IP地址+端口号”，192.168.0.11 + 10001。
+        /// （3）modbus 通信中的地址通过轴号体现，即与轴 01 通信时地址使用 01。
+        ///  特别说明：Connect 函数仅仅建立连接，并未实际通信，此函数执行成功并不能判定与控制器的通信连接正常，可通过读取位置，进行实际通信以判定与控制器的通信是否正常。
+        /// </summary>
+        /// <param name="comportOrIp">串口设备标识或IP地址</param>
+        /// <param name="baudOrPort">串口通信波特率或网络通信端口号</param>
+        /// <returns>实例化后的主控制器对象</returns>
+        public static RobotController Connect(string comportOrIp, int baudOrPort)
+        {
+            FtiMotionController.CheckError(
+                FtiMotionController.fti_open_imc(comportOrIp, baudOrPort, out ulong handleVal),
+                "Connect");
+            return new RobotController(new FtiHandle(handleVal));
+        }
+

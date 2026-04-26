@@ -1,0 +1,430 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MyRobotSDK</name>
+    </assembly>
+    <members>
+        <member name="T:MyRobotSDK.Controllers.AxisController">
+            <summary>
+            【单轴体控制】负责对单个特定轴体进行运动控制与状态查询。
+            </summary>
+        </member>
+        <member name="P:MyRobotSDK.Controllers.AxisController.Axis">
+            <summary>
+            当前控制器绑定的轴体。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetEnabled(System.Boolean)">
+            <summary>
+            使能或失能
+            </summary>
+            <param name="enable">true表示使能，false表示失能</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.MoveAbsolute(System.Single)">
+            <summary>
+            绝对运动
+            </summary>
+            <param name="position">绝对位置坐标</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.MoveRelative(System.Single)">
+            <summary>
+            相对运动
+            </summary>
+            <param name="distance">相对运动距离</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.Stop">
+            <summary>
+            停止运动
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.JogLeft">
+            <summary>
+            向左（负向）连续运动
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.JogRight">
+            <summary>
+            向右（正向）连续运动
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.Home">
+            <summary>
+            搜零（触发内置搜零程序）
+            注：采用绝对编码器，不需要搜零，该函数无实际作用。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetZero">
+            <summary>
+            将当前位置设为零（若在运动则会先停止运动）。
+            注：采用绝对编码器，不能置零，该函数无实际作用。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetPosition">
+            <summary>
+            获取当前绝对坐标值。
+            </summary>
+            <returns>当前位置</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.IsRunning">
+            <summary>
+            查询是否正在运动。
+            特别说明：从状态值中进行解析，先通过底层拉取状态，再进行位运算。
+            </summary>
+            <returns>运行中返回 true，停止返回 false</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetLimits">
+            <summary>
+            获取限位状态。
+            特别说明：从状态值中进行解析，先通过底层拉取状态，再提取限位信号。
+            </summary>
+            <returns>PosLimit: 正限位是否触发, NegLimit: 负限位是否触发</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetMotorModel">
+            <summary>
+            获取电机型号，如“IM28”、“IM35”等。
+            </summary>
+            <returns>电机型号字符串</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.ChangeAddress(System.UInt16)">
+            <summary>
+            修改驱动器地址。出厂默认地址为 1。
+            特别说明：调用该函数修改驱动器地址后，后续的通信均需要使用新地址，务必记录好新地址。
+            </summary>
+            <param name="newAddress">驱动器的新地址</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SaveParamsPermanently">
+            <summary>
+            永久保存当前参数，断电重启后保持。
+            特别说明：
+            （1）带记忆寄存器的擦写寿命是10万次，请谨慎使用。建议不使用“自动保存参数”类似功能。
+            （2）部分参数需要调用该函数才能断电保存，否则断电后丢失，如螺距、闭环中的PID参数等。
+            （3）在未断电情况下，用户可以一次性把需要保存的参数设置好，再调用该函数。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetVelocity(System.Single)">
+            <summary>
+            设置速度（运行速度）。
+            </summary>
+            <param name="velocity">目标运行速度</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetVelocity">
+            <summary>
+            获取速度（运行速度）。
+            </summary>
+            <returns>当前运行速度</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetAcceleration(System.UInt16)">
+            <summary>
+            设置加速系数。
+            特别说明：电机加速时间，从启动到目标速度需要的时间，单位ms。
+            </summary>
+            <param name="accel">加速系数(ms)</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetAcceleration">
+            <summary>
+            获取加速系数。
+            特别说明：电机加速时间，从启动到目标速度需要的时间，单位ms。
+            </summary>
+            <returns>加速系数(ms)</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetDeceleration(System.UInt16)">
+            <summary>
+            设置减速系数。
+            特别说明：电机减速时间，从目标速度到停止需要的时间，单位ms。
+            </summary>
+            <param name="decel">减速系数(ms)</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetDeceleration">
+            <summary>
+            获取减速系数。
+            特别说明：电机减速时间，从目标速度到停止需要的时间，单位ms。
+            </summary>
+            <returns>减速系数(ms)</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetDivision(System.Int32)">
+            <summary>
+            设置细分。
+            特别说明：细分是指电机旋转一周所需的脉冲数。
+            </summary>
+            <param name="division">细分值，常用1600</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetDivision">
+            <summary>
+            获取细分。
+            特别说明：细分是指电机旋转一周所需的脉冲数。
+            </summary>
+            <returns>当前细分值</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetPitch(System.Single)">
+            <summary>
+            设置螺距。
+            特别说明：对于平移台，螺距是指电机旋转一周实际平移的距离。
+            </summary>
+            <param name="pitch">螺距，单位mm</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetPitch">
+            <summary>
+            获取螺距。
+            特别说明：对于平移台，螺距是指电机旋转一周实际平移的距离。
+            </summary>
+            <returns>螺距，单位mm</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetSoftLimitP1(System.Single)">
+            <summary>
+            设置软限位的位置下限。
+            </summary>
+            <param name="limit">软限位的位置下限</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetSoftLimitP1">
+            <summary>
+            获取软限位的位置下限。
+            </summary>
+            <returns>软限位的位置下限</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetSoftLimitP2(System.Single)">
+            <summary>
+            设置软限位的位置上限。
+            </summary>
+            <param name="limit">软限位的位置上限</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetSoftLimitP2">
+            <summary>
+            获取软限位的位置上限。
+            </summary>
+            <returns>软限位的位置上限</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetRegisterUInt32(System.Int32,System.UInt32)">
+            <summary>
+            设置寄存器的值，UINT32类型。
+            特别说明：请谨慎使用，确保地址正确、类型正确。若实际值为负数，则强制类型转换为uint32类型。
+            </summary>
+            <param name="regAddr">寄存器地址</param>
+            <param name="value">数值，UINT32</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetRegisterUInt32(System.Int32)">
+            <summary>
+            读取寄存器的值，UINT32类型。
+            特别说明：请谨慎使用，确保地址正确、类型正确。若实际值为负数，则强制类型转换为int32类型。
+            </summary>
+            <param name="regAddr">寄存器地址</param>
+            <returns>当前数值</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.SetRegisterUInt16(System.Int32,System.UInt16)">
+            <summary>
+            设置寄存器的值，UINT16类型。
+            特别说明：请谨慎使用，确保地址正确、类型正确。
+            </summary>
+            <param name="regAddr">寄存器地址</param>
+            <param name="value">数值，UINT16</param>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.AxisController.GetRegisterUInt16(System.Int32)">
+            <summary>
+            读取寄存器的值，UINT16类型。
+            特别说明：请谨慎使用，确保地址正确、类型正确。
+            </summary>
+            <param name="regAddr">寄存器地址</param>
+            <returns>当前数值，UINT16</returns>
+        </member>
+        <member name="T:MyRobotSDK.Controllers.RobotController">
+            <summary>
+            【核心类】六轴机器人主控制器。
+            负责管理与底层硬件的通信生命周期。
+            </summary>
+        </member>
+        <member name="P:MyRobotSDK.Controllers.RobotController.SdkVersion">
+            <summary>
+            获取底层驱动库的 SDK 版本号，如“2.2.2.0”。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.RobotController.Connect(System.String,System.Int32)">
+            <summary>
+            连接控制器。
+            （1）串口连接时，使用 Modbus-RTU，“COM口+波特率”，COM5 + 115200。
+            （2）网络连接时，使用 Modbus-TCP，“IP地址+端口号”，192.168.0.11 + 10001。
+            （3）modbus 通信中的地址通过轴号体现，即与轴 01 通信时地址使用 01。
+             特别说明：Connect 函数仅仅建立连接，并未实际通信，此函数执行成功并不能判定与控制器的通信连接正常，可通过读取位置，进行实际通信以判定与控制器的通信是否正常。
+            </summary>
+            <param name="comportOrIp">串口设备标识或IP地址</param>
+            <param name="baudOrPort">串口通信波特率或网络通信端口号</param>
+            <returns>实例化后的主控制器对象</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.RobotController.GetAxis(MyRobotSDK.Models.RobotAxis)">
+            <summary>
+            获取特定轴体的控制器对象。
+            通过此对象可以下发针对单轴的运动和配置指令。
+            </summary>
+            <param name="axis">目标轴体</param>
+            <returns>单轴控制器实例</returns>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.RobotController.Dispose">
+            <summary>
+            关闭连接并释放底层通信句柄。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Controllers.RobotController.Finalize">
+            <summary>
+            析构函数，作为资源释放的最后防线。
+            </summary>
+        </member>
+        <member name="T:MyRobotSDK.Exceptions.FtiException">
+            <summary>
+            【功能】自定义硬件通信异常。
+            【特别说明】
+            （1）用于将底层返回的整型错误码（如 0x8001）统一包装为符合 C# 规范的标准异常对象。
+            （2）建议在 WPF 上位机的 ViewModel 层级进行全局 try-catch 拦截，并提取 Message 提示给操作人员。
+            </summary>
+        </member>
+        <member name="P:MyRobotSDK.Exceptions.FtiException.ErrorCode">
+            <summary>
+            原厂底层的 16 进制错误代码，用于查阅硬件故障手册。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Exceptions.FtiException.#ctor(System.Int32,System.String)">
+            <summary>
+            构造函数：初始化带有特定底层错误码和描述的硬件异常。
+            </summary>
+            <param name="errorCode">底层返回的整型错误码 (如 32769)</param>
+            <param name="message">当前业务操作的描述上下文</param>
+        </member>
+        <member name="M:MyRobotSDK.Exceptions.FtiException.#ctor(System.Int32,System.String,System.Exception)">
+            <summary>
+            构造函数：包含内部异常信息，用于异常链的追踪。
+            </summary>
+        </member>
+        <member name="T:MyRobotSDK.HAL.FtiConstants">
+            <summary>
+            【功能】底层驱动器状态映射宏常量。
+            【特别说明】
+            （1）对应头文件中的 #define 宏定义。
+            （2）使用 internal 关键字进行隔离保护，避免将底层的魔法数字 (Magic Numbers) 污染到外层的 WPF 业务逻辑中。
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.HAL.FtiConstants.FT_TRUE">
+            <summary>
+            逻辑真
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.HAL.FtiConstants.FT_FALSE">
+            <summary>
+            逻辑假
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.HAL.FtiConstants.FT_SUCCESS">
+            <summary>
+            底层操作成功返回码
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.HAL.FtiConstants.FT_ERR_INVALID_HANDLE">
+            <summary>
+            错误码：无效的连接句柄
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.HAL.FtiConstants.FT_ERR_INVALID_FEATURE">
+            <summary>
+            错误码：无效的特性或指令不支持
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.HAL.FtiConstants.FT_ERR_NOTIMPLEMENTED">
+            <summary>
+            错误码：底层方法未实现
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.HAL.FtiConstants.FT_ERR_INVALID_AXIS">
+            <summary>
+            错误码：无效的物理轴号
+            </summary>
+        </member>
+        <member name="T:MyRobotSDK.HAL.FtiMotionController">
+            <summary>
+            内部底层通信层，不允许外部 WPF 直接调用。
+            </summary>
+        </member>
+        <member name="T:MyRobotSDK.Models.FtiHandle">
+            <summary>
+            【功能】强类型设备句柄。
+            【特别说明】
+            （1）此结构用于包装底层 64 位无符号长整型 (ulong) 的设备指针，防止开发者将普通数值误传到 P/Invoke 接口中。
+            （2）提供了值相等性比较，方便后续在集合或字典中管理多台控制器的并发连接状态。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Models.FtiHandle.#ctor(System.UInt64)">
+            <summary>
+            【功能】强类型设备句柄。
+            【特别说明】
+            （1）此结构用于包装底层 64 位无符号长整型 (ulong) 的设备指针，防止开发者将普通数值误传到 P/Invoke 接口中。
+            （2）提供了值相等性比较，方便后续在集合或字典中管理多台控制器的并发连接状态。
+            </summary>
+        </member>
+        <member name="P:MyRobotSDK.Models.FtiHandle.Value">
+            <summary>
+            原始底层通信句柄值。
+            </summary>
+        </member>
+        <member name="P:MyRobotSDK.Models.FtiHandle.IsValid">
+            <summary>
+            判断当前通信句柄是否有效（非 0 即认为可能有效）。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Models.FtiHandle.Equals(MyRobotSDK.Models.FtiHandle)">
+            <summary>
+            指示当前句柄是否等于另一个同类型句柄。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Models.FtiHandle.Equals(System.Object)">
+            <summary>
+            指示当前句柄是否等于另一个未知类型对象。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Models.FtiHandle.GetHashCode">
+            <summary>
+            获取当前句柄的哈希代码。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Models.FtiHandle.op_Equality(MyRobotSDK.Models.FtiHandle,MyRobotSDK.Models.FtiHandle)">
+            <summary>
+            判断两个句柄是否指向同一个底层设备引用。
+            </summary>
+        </member>
+        <member name="M:MyRobotSDK.Models.FtiHandle.op_Inequality(MyRobotSDK.Models.FtiHandle,MyRobotSDK.Models.FtiHandle)">
+            <summary>
+            判断两个句柄是否指向不同的底层设备引用。
+            </summary>
+        </member>
+        <member name="T:MyRobotSDK.Models.RobotAxis">
+            <summary>
+            【功能】强类型轴枚举，映射 SAMCS 六轴机器人的物理结构。
+            【特别说明】底层驱动器使用 "01"~"06" 进行寻址，枚举值直接对应其物理轴向 (R-Y-X-Z-P-I)。
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.Models.RobotAxis.Axis1">
+            <summary>
+            旋转轴 (R - Rotation) - 对应控制器地址 01
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.Models.RobotAxis.Axis2">
+            <summary>
+            Y 轴平移 (Y) - 对应控制器地址 02
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.Models.RobotAxis.Axis3">
+            <summary>
+            X 轴平移 (X) - 对应控制器地址 03
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.Models.RobotAxis.Axis4">
+            <summary>
+            Z 轴平移 (Z) - 对应控制器地址 04
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.Models.RobotAxis.Axis5">
+            <summary>
+            俯仰轴 (P - Pitch) - 对应控制器地址 05
+            </summary>
+        </member>
+        <member name="F:MyRobotSDK.Models.RobotAxis.Axis6">
+            <summary>
+            植入轴 (I - Implantation) - 对应控制器地址 06
+            </summary>
+        </member>
+    </members>
+</doc>
