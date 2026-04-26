@@ -1,7 +1,8 @@
-# Visual Studio 忽略文件
-.vs/
-[Bb]in/
-[Ob]j/
+﻿# 编译产物
+bin/
+obj/
 *.user
 *.suo
-*.pdb
+*.cache
+*.dll
+*.xml
