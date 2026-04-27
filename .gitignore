@@ -7,3 +7,4 @@ obj/
 *.cache
 *.dll
 *.xml
+!lib/x64/ftcoreimc.dll
