@@ -6,7 +6,7 @@
 ## 📁 解决方案目录架构
 
 ```text
-📦 MyRobotSDK 2.0
+📦 MyRobotSDK
 ├── 📂 Controllers (业务控制器层 - 对外核心 API)
 │   ├── 📄 RobotController.cs  # 核心入口：负责建立连接、管理设备句柄与生命周期 (IDisposable)
 │   └── 📄 AxisController.cs   # 单轴控制：封装轴体的运动指令、使能控制、实时状态读取等
