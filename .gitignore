@@ -7,4 +7,11 @@ obj/
 *.cache
 *.dll
 *.xml
+*.pdb
 !lib/x64/ftcoreimc.dll
+!SAMCS_WPF/lib/MyRobotSDK.dll
+!SAMCS_WPF/lib/MyRobotSDK.xml
+!SAMCS_WPF/lib/MyRobotSDK.pdb
+
+# 大型数据文件 (npy, 超出 GitHub 100MB 限制)
+*.npy

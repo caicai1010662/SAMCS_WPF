@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="SAMCS">
+
+  <!-- 第一个连杆：基座框架 -->
+  <link name="baselink_framework">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/baselink_framework.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第二个连杆 -->
+  <link name="link1_motor1_R">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/link1_motor1_R.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第一个关节：固定关节 -->
+  <joint name="joint1" type="fixed">
+    <origin xyz="0 0 -0.0337" rpy="0 0 0" />
+    <parent link="baselink_framework" />
+    <child link="link1_motor1_R" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <!-- 第三个连杆 -->
+  <link name="link2_motor2_Y">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/link2_motor2_Y.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第二个关节：连续旋转关节 (R轴：绕Z轴) -->
+  <joint name="joint2" type="continuous">
+    <origin xyz="0 0 -0.03955" rpy="0 0 0" />
+    <parent link="link1_motor1_R" />
+    <child link="link2_motor2_Y" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- 第四个连杆 -->
+  <link name="link3_motor3_X">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/link3_motor3_X.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第三个关节：移动关节 -->
+  <joint name="joint3" type="prismatic">
+    <origin xyz="0 -0.119 -0.06425" rpy="1.5708 0 -3.1416" />
+    <parent link="link2_motor2_Y" />
+    <child link="link3_motor3_X" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0.2" effort="0" velocity="0" />
+  </joint>
+
+  <!-- 第五个连杆 -->
+  <link name="link4_motor4_Z">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/link4_motor4_Z.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第四个关节：移动关节 -->
+  <joint name="joint4" type="prismatic">
+    <origin xyz="0.11019 -0.049 0" rpy="1.5708 0 -1.5708" />
+    <parent link="link3_motor3_X" />
+    <child link="link4_motor4_Z" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0.2" effort="0" velocity="0" />
+  </joint>
+
+  <!-- 第六个连杆 -->
+  <link name="link5_motor5_P">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/link5_motor5_P.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第五个关节：移动关节 -->
+  <joint name="joint5" type="prismatic">
+    <origin xyz="0.189 0 -0.087813" rpy="1.5708 0 1.5708" />
+    <parent link="link4_motor4_Z" />
+    <child link="link5_motor5_P" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0.075" effort="0" velocity="0" />
+  </joint>
+
+  <!-- 第七个连杆 -->
+  <link name="link6_motor6_I">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/link6_motor6_I.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第六个关节：旋转关节 -->
+  <joint name="joint6" type="revolute">
+    <origin xyz="0 0.04705 0.005" rpy="1.5708 0 -3.1416" />
+    <parent link="link5_motor5_P" />
+    <child link="link6_motor6_I" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0" upper="1.5708" effort="0" velocity="0" />
+  </joint>
+
+  <!-- 第八个连杆 -->
+  <link name="link7_clamp">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/link7_clamp.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第七个关节：移动关节 -->
+  <joint name="joint7" type="prismatic">
+    <origin xyz="0.0546 0 0.04586" rpy="1.5708 0 -1.5708" />
+    <parent link="link6_motor6_I" />
+    <child link="link7_clamp" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0.05" effort="0" velocity="0" />
+  </joint>
+
+  <!-- 第九个连杆：工具末端坐标系 -->
+  <link name="Probe">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/Probe.STL" />
+      </geometry>
+      <material name="6061">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+  </link>
+
+  <!-- 第八个关节：固定关节 -->
+  <joint name="joint8" type="fixed">
+    <origin xyz="0 0.02364 0.1697" rpy="0 0 0" />
+    <parent link="link7_clamp" />
+    <child link="Probe" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+</robot>
