@@ -2,7 +2,7 @@
 
 ## 前置条件
 
-- **Windows 10/11 x64** — 原厂驱动仅提供 x64 DLL
+- **Windows 11 x64** — 原厂驱动仅提供 x64 DLL
 - **[.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)**
 - **Visual Studio 2026**
 
