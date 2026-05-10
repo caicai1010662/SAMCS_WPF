@@ -1,4 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<!--
+  SAMCS_WPF 项目文件
+  目标：x64 平台的 WPF 桌面应用（net8.0-windows），承载手术机器人上位机全部 UI 逻辑。
+  MyRobotSDK 通过项目引用 (ProjectReference) 参与级联编译。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -7,9 +12,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
+    <!-- x64 强制——ftcoreimc.dll 仅提供 64 位版本，AnyCPU 编译也会锁定 x64 -->
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
+  <!--
+    排除旧 SDK 源码目录（SDK\** 为占位，实际 SDK 源码在 ..\MyRobotSDK\ 下通过项目引用编译）
+  -->
   <ItemGroup>
     <Compile Remove="SDK\**" />
     <EmbeddedResource Remove="SDK\**" />
@@ -17,29 +26,48 @@
     <Page Remove="SDK\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="lib\x64\ftcoreimc.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+  <!--
+    ftcoreimc.dll —— 原厂非托管驱动，由 MyRobotSDK 项目引用级联复制，无需本地副本。
+  -->
 
+  <!-- NuGet 依赖 -->
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
     <PackageReference Include="System.IO.Ports" Version="10.0.7" />
   </ItemGroup>
 
+  <!-- 预留目录占位——确保 VS 和 VS Code 中目录可见 -->
   <ItemGroup>
     <Folder Include="Models\" />
     <Folder Include="Services\" />
     <Folder Include="Views\" />
+    <Folder Include="Renderers\" />
+    <Folder Include="Converters\" />
   </ItemGroup>
 
+  <!--
+    URDF 和 STL 资产文件——CopyToOutputDirectory=PreserveNewest：
+    只在文件更新时复制，避免每次重建都拷贝 5.5MB 的 STL 文件集合。
+  -->
   <ItemGroup>
-    <!--  直接引用 MyRobotSDK 编译产物 DLL，避免每次调试都重新生成底层项目 -->
-    <Reference Include="MyRobotSDK">
-      <HintPath>lib\MyRobotSDK.dll</HintPath>
-    </Reference>
+    <Content Include="assets\Monitor\meshes\*.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>assets\Monitor\meshes\%(Filename)%(Extension)</Link>
+    </Content>
+    <Content Include="assets\Monitor\SAMCS.urdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>assets\Monitor\%(Filename)%(Extension)</Link>
+    </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyRobotSDK\MyRobotSDK.csproj" />
+  </ItemGroup>
+
+  <!--
+    MyRobotSDK 项目引用。
+    原为本地 DLL 程序集引用 (lib\MyRobotSDK.dll)，现已改为项目引用，
+    两个项目级联编译，SDK 变更实时生效。
+  -->
 
 </Project>

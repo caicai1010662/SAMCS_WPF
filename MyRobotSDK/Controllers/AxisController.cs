@@ -294,7 +294,7 @@ namespace MyRobotSDK.Controllers
         /// 设置细分。
         /// 特别说明：细分是指电机旋转一周所需的脉冲数。
         /// </summary>
-        /// <param name="division">细分值，常用1600</param>
+        /// <param name="division">细分值，六个轴体的细分是定值，都是4000</param>
         [Obsolete("危险操作，仅限调试", true)]
         public void SetDivision(int division)
         {

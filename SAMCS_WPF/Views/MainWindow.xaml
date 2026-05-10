@@ -1,0 +1,53 @@
+<Window
+    x:Class="SAMCS_WPF.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:SAMCS_WPF.Views"
+    xmlns:vm="clr-namespace:SAMCS_WPF.ViewModels"
+    Title="SAMCS 六轴运动控制系统"
+    Width="1200"
+    Height="800"
+    Background="#F3F3F3">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:MonitorViewModel}">
+            <views:MonitorView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StereotaxicViewModel}">
+            <views:StereotaxicView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ImplantViewModel}">
+            <views:ImplantView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <UniformGrid
+            Grid.Row="0"
+            Background="#2D2D30"
+            Columns="3">
+            <RadioButton
+                Content="状态监控"
+                IsChecked="{Binding IsMonitorSelected}"
+                Style="{StaticResource {x:Type ToggleButton}}" />
+            <RadioButton
+                Content="脑立体定向"
+                IsChecked="{Binding IsStereotaxicSelected}"
+                Style="{StaticResource {x:Type ToggleButton}}" />
+            <RadioButton
+                Content="微电极植入"
+                IsChecked="{Binding IsImplantSelected}"
+                Style="{StaticResource {x:Type ToggleButton}}" />
+        </UniformGrid>
+
+        <ContentControl
+            Grid.Row="1"
+            Margin="10"
+            Content="{Binding CurrentView}" />
+    </Grid>
+</Window>
