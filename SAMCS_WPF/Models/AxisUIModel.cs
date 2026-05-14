@@ -41,6 +41,13 @@ namespace SAMCS_WPF.Models
         [ObservableProperty]
         private float _velocity;
 
+        /// <summary>
+        /// 电机是否正在运行中（由 100ms 定时器从 SDK 读取）
+        /// true = 运行中（红色灯），false = 已停止（绿色灯）
+        /// </summary>
+        [ObservableProperty]
+        private bool _isRunning;
+
         // ===================== 单位标识 =====================
 
         /// <summary>
@@ -68,6 +75,18 @@ namespace SAMCS_WPF.Models
         /// </summary>
         [ObservableProperty]
         private float _softLimitMin;
+
+        /// <summary>
+        /// 限位显示文本，格式：[下限位, 上限位]，例如 [-180, 180]
+        /// 当 SoftLimitMin 或 SoftLimitMax 变化时自动刷新
+        /// </summary>
+        public string LimitDisplay
+        {
+            get
+            {
+                return string.Format("[{0}, {1}]", SoftLimitMin, SoftLimitMax);
+            }
+        }
 
         // ===================== 运动参数 =====================
 
@@ -116,6 +135,22 @@ namespace SAMCS_WPF.Models
         partial void OnCurrentPositionChanged(float value)
         {
             OnPropertyChanged(nameof(IsNearLimit));
+        }
+
+        /// <summary>
+        /// 软限位值变化时，同步刷新限位显示文本
+        /// </summary>
+        partial void OnSoftLimitMinChanged(float value)
+        {
+            OnPropertyChanged(nameof(LimitDisplay));
+        }
+
+        /// <summary>
+        /// 软限位值变化时，同步刷新限位显示文本
+        /// </summary>
+        partial void OnSoftLimitMaxChanged(float value)
+        {
+            OnPropertyChanged(nameof(LimitDisplay));
         }
     }
 }

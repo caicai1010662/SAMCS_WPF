@@ -31,12 +31,6 @@ namespace SAMCS_WPF.ViewModels
         private string? _selectedPort;
 
         [ObservableProperty]
-        private ObservableCollection<int> _baudRates = [9600, 19200, 38400, 57600, 115200];
-
-        [ObservableProperty]
-        private int _selectedBaudRate = 115200;
-
-        [ObservableProperty]
         private bool _isConnected;
 
         [ObservableProperty]
@@ -59,7 +53,7 @@ namespace SAMCS_WPF.ViewModels
                 try
                 {
                     // 1. 建立物理连接
-                    _robotService.Connect(SelectedPort!, SelectedBaudRate);
+                    _robotService.Connect(SelectedPort!, 115200);
 
                     // 2. 电机型号握手校验
                     string[] expectedModels =
@@ -89,12 +83,9 @@ namespace SAMCS_WPF.ViewModels
                             return;
                         }
                     }
-
-                    // 3. 校验通过，立即读一次配置 + 启动两个轮询定时器
-                    UpdateAxisConfiguration();
-                    Thread.Sleep(300); // 短暂停顿确保设备稳定后再开始高频刷新
-                    UpdateAxisConfiguration();
-                    Thread.Sleep(300);
+                    // 3. 校验通过
+                    IsConnected = true;
+                    // 4. 校验通过，立即读一次配置 + 启动两个轮询定时器
                     UpdateAxisConfiguration();
                     _refreshTimer.Start();
                     _configTimer.Start();
@@ -108,7 +99,7 @@ namespace SAMCS_WPF.ViewModels
         }
 
         /// <summary>
-        /// 六轴顺序归位 —— 各轴按预设坐标依次移动到默认位置
+        /// 六轴同步归位 —— 所有轴同时启动，统一等待全部停止
         /// </summary>
         [RelayCommand]
         private async Task HomeAllAxesAsync()
@@ -120,35 +111,44 @@ namespace SAMCS_WPF.ViewModels
             }
 
             // 预设归位坐标: R, Y, X, Z, P, I
-            float[] homePositions = [0f, 100f, 100f, 0f, 90f, 10f];
+            float[] homePositions = [0f, 100f, 100f, 32.5f, 45f, 10f];
 
             try
             {
-                // 统一设定速度
+                // 第一步：统一设定所有轴的速度
                 for (int i = 0; i < Axes.Count; i++)
                 {
                     var axisEnum = (RobotAxis)int.Parse(Axes[i].AxisId);
-                    _robotService.GetAxis(axisEnum).SetVelocity(3);
+                    _robotService.GetAxis(axisEnum).SetVelocity(5f);
                 }
 
-                // 逐轴移动到目标位置
+                // 第二步：对所有轴同时下发运动指令（不等待）
+                var axisEnums = new RobotAxis[Axes.Count];
                 for (int i = 0; i < Axes.Count; i++)
                 {
-                    var axisEnum = (RobotAxis)int.Parse(Axes[i].AxisId);
-                    var controller = _robotService.GetAxis(axisEnum);
-                    controller.MoveAbsolute(homePositions[i]);
+                    axisEnums[i] = (RobotAxis)int.Parse(Axes[i].AxisId);
+                    _robotService.GetAxis(axisEnums[i]).MoveAbsolute(homePositions[i]);
+                }
 
-                    // 异步轮询等待运动完成，不阻塞 UI
-                    while (controller.IsRunning())
+                // 第三步：统一轮询，直到所有轴全部停止
+                while (true)
+                {
+                    bool anyRunning = false;
+                    for (int i = 0; i < axisEnums.Length; i++)
                     {
-                        await Task.Delay(50);
+                        if (_robotService.GetAxis(axisEnums[i]).IsRunning())
+                        {
+                            anyRunning = true;
+                            break;
+                        }
                     }
-                    // 当前轴到位后停顿5秒
-                    await Task.Delay(5000);
+
+                    if (!anyRunning) break;
+                    await Task.Delay(50);
                 }
 
                 System.Windows.MessageBox.Show(
-                    "六轴顺序归零完成！", "提示",
+                    "六轴同步归位完成！", "提示",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Information);
             }
@@ -159,7 +159,7 @@ namespace SAMCS_WPF.ViewModels
         }
 
         /// <summary>
-        /// 六轴限位往返测试 —— 各轴依次运动到上限位再返回下限位
+        /// 六轴限位往返测试 —— 各轴依次：上限位 → 下限位 → 默认位置
         /// </summary>
         [RelayCommand]
         private async Task TestAllAxesAsync()
@@ -170,33 +170,38 @@ namespace SAMCS_WPF.ViewModels
                 return;
             }
 
+            // 默认归位坐标: R, Y, X, Z, P, I
+            float[] homePositions = [0f, 100f, 100f, 32.5f, 45f, 10f];
+
             try
             {
                 // 统一设定速度
                 for (int i = 0; i < Axes.Count; i++)
                 {
                     var axisEnum = (RobotAxis)int.Parse(Axes[i].AxisId);
-                    _robotService.GetAxis(axisEnum).SetVelocity(3);
+                    _robotService.GetAxis(axisEnum).SetVelocity(5f);
                 }
 
-                foreach (var axisUI in Axes)
+                for (int i = 0; i < Axes.Count; i++)
                 {
+                    var axisUI = Axes[i];
                     var axisEnum = (RobotAxis)int.Parse(axisUI.AxisId);
                     var controller = _robotService.GetAxis(axisEnum);
 
                     // 往：运动到上限位
                     controller.MoveAbsolute(axisUI.SoftLimitMax);
                     while (controller.IsRunning()) await Task.Delay(50);
-
-                    // 停顿缓冲 5s
-                    await Task.Delay(5000);
+                    await Task.Delay(3000);
 
                     // 返：运动到下限位
                     controller.MoveAbsolute(axisUI.SoftLimitMin);
                     while (controller.IsRunning()) await Task.Delay(50);
+                    await Task.Delay(3000);
 
-                    // 轴间停顿 5s
-                    await Task.Delay(5000);
+                    // 归：回到默认位置
+                    controller.MoveAbsolute(homePositions[i]);
+                    while (controller.IsRunning()) await Task.Delay(50);
+                    await Task.Delay(3000);
                 }
 
                 System.Windows.MessageBox.Show(
@@ -326,6 +331,7 @@ namespace SAMCS_WPF.ViewModels
 
                     axisUI.CurrentPosition = controller.GetPosition();
                     axisUI.Velocity = controller.GetVelocity();
+                    axisUI.IsRunning = controller.IsRunning();
                 }
             }
             catch (Exception)

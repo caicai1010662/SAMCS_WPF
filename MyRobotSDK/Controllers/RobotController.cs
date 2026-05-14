@@ -20,7 +20,7 @@ namespace MyRobotSDK.Controllers
         }
 
         /// <summary>
-        /// 获取底层驱动库的 SDK 版本号，如“2.2.2.0”。
+        /// 获取底层驱动库的 SDK 版本号。
         /// </summary>
         public static string? SdkVersion => FtiMotionController.fti_getsdkversion() != IntPtr.Zero
             ? System.Runtime.InteropServices.Marshal.PtrToStringAnsi(FtiMotionController.fti_getsdkversion())
