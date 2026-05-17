@@ -88,6 +88,25 @@ namespace SAMCS_WPF.Models
             }
         }
 
+        /// <summary>
+        /// 速度软限位，所有轴统一最大允许速度 5 mm/s 或 °/s
+        /// SetVelocity() 时强制检查，超过此值禁止下发
+        /// </summary>
+        [ObservableProperty]
+        private float _softVelocityLimit = 5f;
+
+        /// <summary>
+        /// 速度限位显示文本，格式：[0, 最大速度]，例如 [0, 5]
+        /// 当 SoftVelocityLimit 变化时自动刷新
+        /// </summary>
+        public string VelocityLimitDisplay
+        {
+            get
+            {
+                return string.Format("[0, {0}]", SoftVelocityLimit);
+            }
+        }
+
         // ===================== 运动参数 =====================
 
         /// <summary>
@@ -151,6 +170,14 @@ namespace SAMCS_WPF.Models
         partial void OnSoftLimitMaxChanged(float value)
         {
             OnPropertyChanged(nameof(LimitDisplay));
+        }
+
+        /// <summary>
+        /// 速度限位值变化时，同步刷新速度限位显示文本
+        /// </summary>
+        partial void OnSoftVelocityLimitChanged(float value)
+        {
+            OnPropertyChanged(nameof(VelocityLimitDisplay));
         }
     }
 }

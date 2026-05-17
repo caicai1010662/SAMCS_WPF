@@ -33,6 +33,20 @@ namespace SAMCS_WPF.ViewModels
         [ObservableProperty]
         private bool _isConnected;
 
+        /// <summary>
+        /// 【仅前端展示】波特率选项列表，实际通信固定使用 115200
+        /// 此属性不影响 Connect() 内部的串口参数
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<int> _baudRates = [9600, 19200, 38400, 57600, 115200];
+
+        /// <summary>
+        /// 【仅前端展示】用户在下拉框中选择的波特率值，默认 115200
+        /// 此属性不影响 Connect() 内部的串口参数
+        /// </summary>
+        [ObservableProperty]
+        private int _selectedBaudRate = 115200;
+
         [ObservableProperty]
         private ObservableCollection<AxisUIModel> _axes = [];
 
@@ -118,16 +132,48 @@ namespace SAMCS_WPF.ViewModels
                 // 第一步：统一设定所有轴的速度
                 for (int i = 0; i < Axes.Count; i++)
                 {
-                    var axisEnum = (RobotAxis)int.Parse(Axes[i].AxisId);
-                    _robotService.GetAxis(axisEnum).SetVelocity(5f);
+                    var axisUI = Axes[i];
+                    float targetSpeed = 5f;
+
+                    // 【安全限位】速度硬限制检查：超过 SoftVelocityLimit 则禁止下发，return 直接终止函数
+                    if (targetSpeed > axisUI.SoftVelocityLimit)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"{axisUI.AxisName} 速度超过安全限位！\n" +
+                            $"允许范围：[0, {axisUI.SoftVelocityLimit}]\n" +
+                            $"目标速度：{targetSpeed}",
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var axisEnum = (RobotAxis)int.Parse(axisUI.AxisId);
+                    _robotService.GetAxis(axisEnum).SetVelocity(targetSpeed);
                 }
 
                 // 第二步：对所有轴同时下发运动指令（不等待）
                 var axisEnums = new RobotAxis[Axes.Count];
                 for (int i = 0; i < Axes.Count; i++)
                 {
-                    axisEnums[i] = (RobotAxis)int.Parse(Axes[i].AxisId);
-                    _robotService.GetAxis(axisEnums[i]).MoveAbsolute(homePositions[i]);
+                    var axisUI = Axes[i];
+                    float targetPos = homePositions[i];
+
+                    // 【安全限位】位置硬限制检查：目标位置必须在 [SoftLimitMin, SoftLimitMax] 范围内
+                    if (targetPos < axisUI.SoftLimitMin || targetPos > axisUI.SoftLimitMax)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"{axisUI.AxisName} 目标位置超过安全限位！\n" +
+                            $"允许范围：[{axisUI.SoftLimitMin}, {axisUI.SoftLimitMax}]\n" +
+                            $"目标位置：{targetPos}",
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    axisEnums[i] = (RobotAxis)int.Parse(axisUI.AxisId);
+                    _robotService.GetAxis(axisEnums[i]).MoveAbsolute(targetPos);
                 }
 
                 // 第三步：统一轮询，直到所有轴全部停止
@@ -178,8 +224,24 @@ namespace SAMCS_WPF.ViewModels
                 // 统一设定速度
                 for (int i = 0; i < Axes.Count; i++)
                 {
-                    var axisEnum = (RobotAxis)int.Parse(Axes[i].AxisId);
-                    _robotService.GetAxis(axisEnum).SetVelocity(5f);
+                    var axisUI = Axes[i];
+                    float targetSpeed = 5f;
+
+                    // 【安全限位】速度硬限制检查：超过 SoftVelocityLimit 则禁止下发，return 直接终止函数
+                    if (targetSpeed > axisUI.SoftVelocityLimit)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"{axisUI.AxisName} 速度超过安全限位！\n" +
+                            $"允许范围：[0, {axisUI.SoftVelocityLimit}]\n" +
+                            $"目标速度：{targetSpeed}",
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var axisEnum = (RobotAxis)int.Parse(axisUI.AxisId);
+                    _robotService.GetAxis(axisEnum).SetVelocity(targetSpeed);
                 }
 
                 for (int i = 0; i < Axes.Count; i++)
@@ -189,17 +251,56 @@ namespace SAMCS_WPF.ViewModels
                     var controller = _robotService.GetAxis(axisEnum);
 
                     // 往：运动到上限位
-                    controller.MoveAbsolute(axisUI.SoftLimitMax);
+                    // 【安全限位】上限位目标亦需通过范围检查，防御配置错误（如 Min > Max）
+                    float targetMax = axisUI.SoftLimitMax;
+                    if (targetMax < axisUI.SoftLimitMin || targetMax > axisUI.SoftLimitMax)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"{axisUI.AxisName} 目标位置超过安全限位！\n" +
+                            $"允许范围：[{axisUI.SoftLimitMin}, {axisUI.SoftLimitMax}]\n" +
+                            $"目标位置：{targetMax}",
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+                    controller.MoveAbsolute(targetMax);
                     while (controller.IsRunning()) await Task.Delay(50);
                     await Task.Delay(3000);
 
                     // 返：运动到下限位
-                    controller.MoveAbsolute(axisUI.SoftLimitMin);
+                    // 【安全限位】下限位目标亦需通过范围检查，防御配置错误
+                    float targetMin = axisUI.SoftLimitMin;
+                    if (targetMin < axisUI.SoftLimitMin || targetMin > axisUI.SoftLimitMax)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"{axisUI.AxisName} 目标位置超过安全限位！\n" +
+                            $"允许范围：[{axisUI.SoftLimitMin}, {axisUI.SoftLimitMax}]\n" +
+                            $"目标位置：{targetMin}",
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+                    controller.MoveAbsolute(targetMin);
                     while (controller.IsRunning()) await Task.Delay(50);
                     await Task.Delay(3000);
 
                     // 归：回到默认位置
-                    controller.MoveAbsolute(homePositions[i]);
+                    float homePos = homePositions[i];
+                    // 【安全限位】位置硬限制检查：目标位置必须在 [SoftLimitMin, SoftLimitMax] 范围内
+                    if (homePos < axisUI.SoftLimitMin || homePos > axisUI.SoftLimitMax)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"{axisUI.AxisName} 目标位置超过安全限位！\n" +
+                            $"允许范围：[{axisUI.SoftLimitMin}, {axisUI.SoftLimitMax}]\n" +
+                            $"目标位置：{homePos}",
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+                    controller.MoveAbsolute(homePos);
                     while (controller.IsRunning()) await Task.Delay(50);
                     await Task.Delay(3000);
                 }
@@ -270,6 +371,7 @@ namespace SAMCS_WPF.ViewModels
 
         /// <summary>
         /// 按产品规格初始化六轴 UI 模型
+        /// SoftVelocityLimit = 5：所有轴统一最大安全速度，SetVelocity() 时强制检查
         /// </summary>
         private void InitializeAxes()
         {
@@ -279,37 +381,43 @@ namespace SAMCS_WPF.ViewModels
             {
                 AxisName = "R(旋转)", AxisId = "01", MotorModel = "IM42ET_485",
                 PosUnit = "°", VelUnit = "°/s",
-                SoftLimitMin = -180, SoftLimitMax = 180, CurrentPosition = 0
+                SoftLimitMin = -180.000f, SoftLimitMax = 180.000f, CurrentPosition = 0,
+                SoftVelocityLimit = 5
             });
             Axes.Add(new AxisUIModel
             {
                 AxisName = "Y(平移)", AxisId = "02", MotorModel = "IM42ET_485",
                 PosUnit = "mm", VelUnit = "mm/s",
-                SoftLimitMin = 0, SoftLimitMax = 200, CurrentPosition = 0
+                SoftLimitMin = 0.000f, SoftLimitMax = 200.000f, CurrentPosition = 0,
+                SoftVelocityLimit = 5
             });
             Axes.Add(new AxisUIModel
             {
                 AxisName = "X(平移)", AxisId = "03", MotorModel = "IM42ET_485",
                 PosUnit = "mm", VelUnit = "mm/s",
-                SoftLimitMin = 0, SoftLimitMax = 200, CurrentPosition = 0
+                SoftLimitMin = 0.000f, SoftLimitMax = 200.000f, CurrentPosition = 0,
+                SoftVelocityLimit = 5
             });
             Axes.Add(new AxisUIModel
             {
                 AxisName = "Z(平移)", AxisId = "04", MotorModel = "IM42ET_485",
                 PosUnit = "mm", VelUnit = "mm/s",
-                SoftLimitMin = 0, SoftLimitMax = 75, CurrentPosition = 0
+                SoftLimitMin = 0.000f, SoftLimitMax = 75.000f, CurrentPosition = 0,
+                SoftVelocityLimit = 5
             });
             Axes.Add(new AxisUIModel
             {
                 AxisName = "P(俯仰)", AxisId = "05", MotorModel = "IM35ET_485",
                 PosUnit = "°", VelUnit = "°/s",
-                SoftLimitMin = 0, SoftLimitMax = 90, CurrentPosition = 0
+                SoftLimitMin = 0.000f, SoftLimitMax = 90.000f, CurrentPosition = 0,
+                SoftVelocityLimit = 5
             });
             Axes.Add(new AxisUIModel
             {
                 AxisName = "I(植入)", AxisId = "06", MotorModel = "IM28ET_485",
                 PosUnit = "mm", VelUnit = "mm/s",
-                SoftLimitMin = 0, SoftLimitMax = 50, CurrentPosition = 0
+                SoftLimitMin = 0, SoftLimitMax = 50, CurrentPosition = 0,
+                SoftVelocityLimit = 5
             });
         }
 

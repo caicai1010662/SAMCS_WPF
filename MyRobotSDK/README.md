@@ -56,7 +56,7 @@ using (var robot = RobotController.Connect("COM5", 115200))
 | 方法名 | 参数 | 返回值 | 功能描述 |
 | :--- | :--- | :--- | :--- |
 | `Connect` | `string comportOrIp, int baudOrPort` | `RobotController` | 建立与底层控制器的通信连接。串口模式传 `"COM5" + 115200`（Modbus-RTU）；网络模式传 `"192.168.0.11" + 10001`（Modbus-TCP）。成功后返回控制器实例，需用 `using` 包裹以确保资源释放。 |
-| `SdkVersion` | 无 (静态属性) | `string?` | 获取底层 `ftcoreimc.dll` 的版本号字符串（如 `"2.2.2.0"`）。 |
+| `SdkVersion` | 无 (静态属性) | `string?` | 获取底层 `ftcoreimc.dll` 的版本号字符串。 |
 
 ### 实例成员
 
@@ -88,7 +88,7 @@ using (var robot = RobotController.Connect("192.168.0.11", 10001))
 ## 🕹️ AxisController 核心 API 参考
 
 `AxisController` 是 SAMCS 六轴系统的单轴控制核心。
-出于设备的安全考量，所有涉及底层寄存器覆写、系统细分/螺距修改及软限位篡改的危险方法已被物理级屏蔽（`[Obsolete]` 编译阻断）。
+出于设备的安全考量，所有涉及底层寄存器覆写、系统细分、螺距修改、加减速度系数及软限位篡改的危险方法已被物理级屏蔽（`[Obsolete]` 编译阻断）。
 
 **WPF 业务层仅允许调用以下经过严格测试的安全 API。**
 
@@ -119,7 +119,7 @@ using (var robot = RobotController.Connect("192.168.0.11", 10001))
 | `GetPosition` | `float` | 获取当前轴的绝对坐标位置。 |
 | `IsRunning` | `bool` | 查询电机是否处于运动状态（`true` 为运行中，`false` 为已停止）。 |
 | `GetLimits` | `(bool PosLimit, bool NegLimit)` | 获取物理限位传感器状态。返回元组，包含正限位和负限位的触发情况。 |
-| `GetMotorModel` | `string` | 获取底层绑定的硬件电机型号（如 "IM28"）。 |
+| `GetMotorModel` | `string` | 获取底层绑定的硬件电机型号。 |
 
 ### 4. 速度与加减速配置
 
