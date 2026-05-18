@@ -13,13 +13,13 @@ namespace SAMCS_WPF.Models
         /// 轴名称，如 "R(旋转)"、"Y(平移)"
         /// </summary>
         [ObservableProperty]
-        private string _axisName = string.Empty;
+        private string _axisName = "";
 
         /// <summary>
         /// 轴硬件 ID，如 "01" ~ "06"
         /// </summary>
         [ObservableProperty]
-        private string _axisId = string.Empty;
+        private string _axisId = "";
 
         /// <summary>
         /// 电机型号，连接时由 SDK 读取
@@ -54,13 +54,13 @@ namespace SAMCS_WPF.Models
         /// 位置单位（° 或 mm）
         /// </summary>
         [ObservableProperty]
-        private string _posUnit = string.Empty;
+        private string _posUnit = "";
 
         /// <summary>
         /// 速度单位（°/s 或 mm/s）
         /// </summary>
         [ObservableProperty]
-        private string _velUnit = string.Empty;
+        private string _velUnit = "";
 
         // ===================== 软限位 =====================
 
