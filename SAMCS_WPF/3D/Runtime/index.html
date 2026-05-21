@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <title>SAMCS Scientific Digital Twin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        /* 渲染容器 */
+        #viewport {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            border-radius: 14px;
+            background: #1a1a2e;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewport"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./js/three.module.min.js",
+                "three/examples/jsm/loaders/STLLoader.js": "./js/STLLoader.js",
+                "three/examples/jsm/controls/OrbitControls.js": "./js/OrbitControls.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+        import URDFLoader from './js/URDFLoader.js';
+
+        // ===================== 1. 工控级全行为锁死补丁 =====================
+        // 彻底拦截鼠标右键菜单，防止 WebView2 弹出默认菜单白框
+        window.addEventListener('contextmenu', e => e.preventDefault(), { capture: true });
+        // 彻底屏蔽键盘 F5 / Ctrl+R 等一切可能导致网页意外刷新的后门
+        window.addEventListener('keydown', e => {
+            if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 'r') || e.key === 'BrowserRefresh') {
+                e.preventDefault(); e.stopPropagation();
+            }
+        }, { capture: true });
+
+        // ===================== 2. 渲染器初始化 =====================
+        const viewport = document.getElementById('viewport');
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        viewport.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+
+        // 亮蓝色天空 + 远处雾化#BADDFC
+        scene.background = new THREE.Color(0xBADDFC);
+        scene.fog = new THREE.Fog(0x5ba0d0, 4, 14);
+
+        // ===================== 3. 摄像机与控制器 =====================
+        const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.01, 100);
+        camera.position.set(2, 1, 2);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enablePan = false;
+        controls.minDistance = 1.0;
+        controls.maxDistance = 5;
+        controls.target.set(0, 0.25, 0);
+        controls.minPolarAngle = 1.1;
+        controls.maxPolarAngle = 1.65;
+        controls.update();
+
+        // ===================== 4. 布光 =====================
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        keyLight.position.set(4, 6, 3);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.set(1024, 1024);
+        keyLight.shadow.camera.near = 0.5;
+        keyLight.shadow.camera.far = 20;
+        keyLight.shadow.camera.left = -2;
+        keyLight.shadow.camera.right = 2;
+        keyLight.shadow.camera.top = 2;
+        keyLight.shadow.camera.bottom = -2;
+        keyLight.shadow.bias = -0.0005;
+        scene.add(keyLight);
+
+        const rimLight = new THREE.DirectionalLight(0x8899cc, 1.0);
+        rimLight.position.set(-4, 3, -4);
+        scene.add(rimLight);
+
+        // ===================== 5. 圆形深色地面 =====================
+        const groundPlane = new THREE.Mesh(
+            new THREE.CircleGeometry(4, 48),
+            new THREE.MeshStandardMaterial({ color: 0x333840, roughness: 0.85, metalness: 0.05 })
+        );
+        groundPlane.rotation.x = -Math.PI / 2;
+        // 【可调参数】地面高度
+        groundPlane.position.y = -0.12;
+        groundPlane.receiveShadow = true;
+        scene.add(groundPlane);
+
+        // ===================== 6. 探针末端轨迹追踪组件 =====================
+        const MAX_TRAJECTORY_POINTS = 60;
+        const trajectoryPositions = new Float32Array(MAX_TRAJECTORY_POINTS * 3);
+
+        const trajectoryGeometry = new THREE.BufferGeometry();
+        trajectoryGeometry.setAttribute('position', new THREE.BufferAttribute(trajectoryPositions, 3));
+        trajectoryGeometry.getAttribute('position').setUsage(THREE.DynamicDrawUsage);
+
+        const trajectoryMaterial = new THREE.LineBasicMaterial({
+            color: 0xFF0000,
+            transparent: true,
+            opacity: 0.85,
+            depthWrite: false
+        });
+
+        const trajectoryLine = new THREE.Line(trajectoryGeometry, trajectoryMaterial);
+        scene.add(trajectoryLine);
+
+        const pointsQueue = [];
+
+        // ===================== 7. C# 跨进程中继接口占位 =====================
+        window.updateJoint = (name, value) => JSON.stringify({ ok: false, error: '模型尚未加载' });
+        window.updateAllJoints = (data) => JSON.stringify({ ok: false, error: '模型尚未加载' });
+        window.getJointNames = () => JSON.stringify([]);
+
+        // ===================== 8. 模型加载（异步阴影） =====================
+        let endEffectorNode = null;
+        const manager = new THREE.LoadingManager();
+        // STL 全部加载完成后：给每个 mesh 开投影
+        manager.onLoad = () => {
+            scene.traverse(child => {
+                if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+                const n = child.name ? child.name.toLowerCase() : '';
+                if (!endEffectorNode && (n === 'probe' || n === 'link7' || n === 'link6')) endEffectorNode = child;
+            });
+            if (!endEffectorNode) scene.traverse(c => { if (c.isMesh) endEffectorNode = c; });
+            console.log('[阴影] 模型投影已启用');
+        };
+        const loader = new URDFLoader(manager);
+        const modelUrl = 'https://samcs-model.local/SAMCS.urdf';
+        console.log(`开始加载: ${modelUrl}`);
+
+        loader.load(modelUrl, robot => {
+            console.log(`URDF 解析完成，关节数=${Object.keys(robot.joints).length}`);
+            robot.rotation.set(-Math.PI / 2, 0, 0);
+            robot.position.set(0, 0.66, 0);
+            scene.add(robot);
+
+            // --- 关节方向修正映射配置表 ---
+            const jointDirectionMap = { 'joint2': -1 };
+
+            // --- 注册供 C# 上位机跨进程调用的核心驱动 API 接口 ---
+            window.updateJoint = function (name, value) {
+                const j = robot.joints[name]; if (!j) return JSON.stringify({ ok: false });
+                const dir = jointDirectionMap[name] || 1; j.setJointValue(value * dir);
+                return JSON.stringify({ ok: true, joint: name, value: value * dir });
+            };
+
+            window.updateAllJoints = function (data) {
+                const jointData = typeof data === 'string' ? JSON.parse(data) : data;
+                const results = [];
+                for (const item of jointData) {
+                    const j = robot.joints[item.n];
+                    if (j && typeof j.setJointValue === 'function') {
+                        const dir = jointDirectionMap[item.n] || 1;
+                        j.setJointValue(item.v * dir);
+                        results.push({ ok: true, joint: item.n, value: item.v * dir });
+                    }
+                }
+                return JSON.stringify(results);
+            };
+
+            window.getJointNames = function () {
+                const result = [];
+                for (const key in robot.joints) {
+                    const j = robot.joints[key];
+                    result.push({ name: key, type: j.jointType, limits: j.limit ? { lower: j.limit.lower, upper: j.limit.upper } : null, cur: j.jointValue ? j.jointValue[0] : 0 });
+                }
+                return JSON.stringify(result);
+            };
+        }, undefined, err => console.error(err));
+
+        // ===================== 9. 实时轨迹捕获动态重绘管线 =====================
+        const tempPosition = new THREE.Vector3();
+
+        function trackTrajectory() {
+            if (!endEffectorNode) return;
+
+            // 解算世界坐标矩阵，提取针尖位置绝对世界坐标
+            endEffectorNode.getWorldPosition(tempPosition);
+
+            // 过滤静止冗余点：移动距离超过 1mm 时才进行压入，防止连线积压
+            if (pointsQueue.length > 0) {
+                const lastPoint = pointsQueue[pointsQueue.length - 1];
+                if (tempPosition.distanceTo(lastPoint) < 0.001) return;
+            }
+
+            pointsQueue.push(tempPosition.clone());
+
+            // 队列溢出控制（先进先出滑动剪裁）
+            if (pointsQueue.length > MAX_TRAJECTORY_POINTS) {
+                pointsQueue.shift();
+            }
+
+            const posAttribute = trajectoryGeometry.getAttribute('position');
+            for (let i = 0; i < pointsQueue.length; i++) {
+                posAttribute.setXYZ(i, pointsQueue[i].x, pointsQueue[i].y, pointsQueue[i].z);
+            }
+
+            // 缓冲区空白填充，防坐标归零
+            const lastValidPoint = pointsQueue[pointsQueue.length - 1];
+            for (let i = pointsQueue.length; i < MAX_TRAJECTORY_POINTS; i++) {
+                posAttribute.setXYZ(i, lastValidPoint.x, lastValidPoint.y, lastValidPoint.z);
+            }
+
+            posAttribute.needsUpdate = true;
+            trajectoryGeometry.setDrawRange(0, pointsQueue.length);
+        }
+
+        // ===================== 10. 渲染循环与响应 =====================
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            trackTrajectory(); // 驱动每帧轨迹解算
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth, h = window.innerHeight;
+            if (w === 0 || h === 0) return;
+            camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+        });
+        window.dispatchEvent(new Event('resize'));
+    </script>
+</body>
+
+</html>

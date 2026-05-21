@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     d:DesignHeight="750"
     d:DesignWidth="1100"
     Background="#F5F5F7"
@@ -34,30 +35,35 @@
             <Setter Property="Margin" Value="0,0,0,12" />
         </Style>
 
-        <!--  普通按钮：极简灰白圆角  -->
+        <!--  普通按钮：灰白圆角 + 悬停变色 + 按下变深  -->
         <Style x:Key="MaterialButton" TargetType="Button">
             <Setter Property="Background" Value="#E8E8ED" />
             <Setter Property="Foreground" Value="#1D1D1F" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border
+                            x:Name="border"
                             Padding="{TemplateBinding Padding}"
                             Background="{TemplateBinding Background}"
                             CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#D1D1D6" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#C7C7CC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#D1D1D6" />
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
         <!--  主按钮：强调蓝  -->
@@ -69,23 +75,39 @@
             <Setter Property="Foreground" Value="White" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#0066CC" />
+                    <Setter Property="Background" Value="#0060C0" />
                 </Trigger>
             </Style.Triggers>
         </Style>
 
-        <!--  危险按钮：警示红  -->
+        <!--  危险按钮：警示红 · 悬停深红 + 按下更暗  -->
         <Style
             x:Key="DangerButton"
             BasedOn="{StaticResource MaterialButton}"
             TargetType="Button">
             <Setter Property="Background" Value="#FF3B30" />
             <Setter Property="Foreground" Value="White" />
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E53020" />
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E53020" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#CC2210" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -95,18 +117,9 @@
             <ColumnDefinition Width="6*" />
         </Grid.ColumnDefinitions>
 
-        <!--  Web3D 渲染区（左深）  -->
-        <Border
-            Grid.Column="0"
-            Margin="0,0,15,0"
-            Background="#1C1C1E"
-            CornerRadius="12">
-            <TextBlock
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                FontSize="18"
-                Foreground="#9AA0A6"
-                Text="[ 3D Web Viewer 渲染区 ]" />
+        <!--  Web3D 渲染区：仅布局占位，视觉效果由 index.html 内部控制  -->
+        <Border Grid.Column="0" Margin="0,0,15,0">
+            <wv2:WebView2 x:Name="WebView3D" DefaultBackgroundColor="Transparent" />
         </Border>
 
         <Grid Grid.Column="1">
@@ -142,7 +155,6 @@
                             VerticalAlignment="Center"
                             Foreground="#86868B"
                             Text="波特率：" />
-                        <!--  波特率选择仅前端展示，实际通信固定使用 115200  -->
                         <ComboBox
                             Width="80"
                             Height="32"
@@ -171,7 +183,12 @@
                 </StackPanel>
             </Border>
 
-            <!--  六轴参数监控卡片  -->
+            <!--
+                ===== 六轴参数监控表格 =====
+                设计原则：去网格线、动静分区、交替行底色。
+                上半区（位置+速度）为重点监视区，有彩色底色。
+                下半区（限位+配置）为辅助参数区，交替白/浅灰。
+            -->
             <Border
                 Grid.Row="1"
                 Margin="0,15,0,0"
@@ -186,271 +203,257 @@
                     <TextBlock
                         Grid.Row="0"
                         Style="{StaticResource CardTitle}"
-                        Text="六轴参数监控" />
+                        Text="参数监控" />
 
-                    <Grid Grid.Row="1" Margin="0,5,0,0">
+                    <Grid Grid.Row="1" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="110" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <!--  左侧标签列  -->
+                        <!--  ========== 左侧标签列 ==========  -->
                         <Border
-                            Background="#FAFAFA"
-                            BorderBrush="#E5E5EA"
+                            Grid.Column="0"
+                            Background="#F8F8FA"
+                            BorderBrush="#E8E8EC"
                             BorderThickness="1,1,0,1"
-                            CornerRadius="8,0,0,8">
+                            CornerRadius="6,0,0,6">
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="1.2*" />
+                                    <RowDefinition Height="1.1*" />
+                                    <!--  Row 0: 轴名称表头  -->
                                     <RowDefinition Height="1*" />
+                                    <!--  Row 1: 轴号  -->
                                     <RowDefinition Height="1*" />
-                                    <RowDefinition Height="1.3*" />
+                                    <!--  Row 2: 电机型号  -->
+                                    <RowDefinition Height="1.6*" />
+                                    <!--  Row 3: 绝对位置  -->
+                                    <RowDefinition Height="1.4*" />
+                                    <!--  Row 4: 速度  -->
                                     <RowDefinition Height="1*" />
+                                    <!--  Row 5: 位置限位  -->
                                     <RowDefinition Height="1*" />
+                                    <!--  Row 6: 速度限位  -->
                                     <RowDefinition Height="1*" />
+                                    <!--  Row 7: 加速系数  -->
                                     <RowDefinition Height="1*" />
+                                    <!--  Row 8: 减速系数  -->
                                     <RowDefinition Height="1*" />
+                                    <!--  Row 9: 螺距  -->
                                     <RowDefinition Height="1*" />
-                                    <RowDefinition Height="1*" />
+                                    <!--  Row 10: 细分  -->
                                 </Grid.RowDefinitions>
 
                                 <Grid.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="#E5E5EA" />
-                                        <Setter Property="BorderThickness" Value="0,0,0,1" />
-                                    </Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Center" />
                                         <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Foreground" Value="#86868B" />
+                                        <Setter Property="Foreground" Value="#8E8E93" />
+                                        <Setter Property="FontSize" Value="13" />
                                     </Style>
                                 </Grid.Resources>
 
-                                <!--  Row 0: 轴名称（含运行状态灯）  -->
-                                <Border Grid.Row="0">
-                                    <TextBlock
-                                        FontWeight="Bold"
-                                        Foreground="#1D1D1F"
-                                        Text="轴 / 参数" />
+                                <TextBlock
+                                    Grid.Row="0"
+                                    FontSize="14"
+                                    FontWeight="Bold"
+                                    Foreground="#1D1D1F"
+                                    Text="监控参数" />
+
+                                <TextBlock Grid.Row="1" FontWeight="SemiBold" Text="轴号" />
+                                <TextBlock Grid.Row="2" FontWeight="SemiBold" Text="电机型号" />
+
+                                <!--  动态监视区  -->
+                                <Border Grid.Row="3" Background="#EBF5FF">
+                                    <TextBlock FontWeight="Bold" Foreground="#007AFF" Text="绝对位置 (mm/°)" />
                                 </Border>
-                                <!--  Row 1: 轴号  -->
-                                <Border Grid.Row="1">
-                                    <TextBlock FontWeight="Bold" Text="轴      号" />
+                                <Border Grid.Row="4" Background="#F2F2F7">
+                                    <TextBlock FontWeight="Bold" Foreground="#1D1D1F" Text="速度 (mm/°·s)" />
                                 </Border>
-                                <!--  Row 2: 电机型号  -->
-                                <Border Grid.Row="2">
-                                    <TextBlock FontWeight="Bold" Text="电机型号" />
+
+                                <!--  静态配置区  -->
+                                <TextBlock Grid.Row="5" Text="位置限位" />
+                                <TextBlock Grid.Row="6" Text="速度限位" />
+                                <Border Grid.Row="7" Background="#F8F8FA">
+                                    <TextBlock Text="加速系数 (ms)" />
                                 </Border>
-                                <!--  Row 3: 绝对位置  -->
-                                <Border Grid.Row="3">
-                                    <TextBlock
-                                        FontWeight="Bold"
-                                        Foreground="#0071E3"
-                                        Text="绝对位置" />
+                                <TextBlock Grid.Row="8" Text="减速系数 (ms)" />
+                                <Border Grid.Row="9" Background="#F8F8FA">
+                                    <TextBlock Text="螺距 (mm)" />
                                 </Border>
-                                <!--  Row 4: 速度  -->
-                                <Border Grid.Row="4">
-                                    <TextBlock FontWeight="Bold" Text="速      度" />
-                                </Border>
-                                <!--  Row 5: 位置限位  -->
-                                <Border Grid.Row="5">
-                                    <TextBlock FontWeight="Bold" Text="位置限位" />
-                                </Border>
-                                <!--  Row 6: 速度限位  -->
-                                <Border Grid.Row="6">
-                                    <TextBlock FontWeight="Bold" Text="速度限位" />
-                                </Border>
-                                <!--  Row 7: 加速系数  -->
-                                <Border Grid.Row="7" Height="35" VerticalAlignment="Bottom">
-                                    <TextBlock FontWeight="Bold" Text="加速系数 (ms)" />
-                                </Border>
-                                <!--  Row 8: 减速系数  -->
-                                <Border Grid.Row="8">
-                                    <TextBlock FontWeight="Bold" Text="减速系数 (ms)" />
-                                </Border>
-                                <!--  Row 9: 螺距  -->
-                                <Border Grid.Row="9">
-                                    <TextBlock FontWeight="Bold" Text="螺  距 (mm)" />
-                                </Border>
-                                <!--  Row 10: 细分  -->
-                                <Border Grid.Row="10" BorderThickness="0">
-                                    <TextBlock FontWeight="Bold" Text="细  分 (P/R)" />
-                                </Border>
+                                <TextBlock Grid.Row="10" Text="细分 (P/R)" />
                             </Grid>
                         </Border>
 
-                        <!--  右侧数据列  -->
+                        <!--  ========== 右侧数据列 ==========  -->
                         <Border
                             Grid.Column="1"
-                            BorderBrush="#E5E5EA"
+                            BorderBrush="#E8E8EC"
                             BorderThickness="1,1,1,1"
-                            CornerRadius="0,8,8,0">
+                            CornerRadius="0,6,6,0">
                             <ItemsControl ItemsSource="{Binding Axes}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <UniformGrid Rows="1" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
-
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <!--  去除竖线：BorderThickness 不设右线  -->
-                                        <Border>
-                                            <Grid>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="1.2*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1.3*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1*" />
-                                                    <RowDefinition Height="1*" />
-                                                </Grid.RowDefinitions>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="1.1*" />
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1.6*" />
+                                                <RowDefinition Height="1.4*" />
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
+                                            </Grid.RowDefinitions>
 
-                                                <Grid.Resources>
+                                            <!--  Row 0：轴名 + 状态灯  -->
+                                            <Border Grid.Row="0" Background="#F8F8FA">
+                                                <StackPanel
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Orientation="Horizontal">
+                                                    <TextBlock
+                                                        Margin="0,0,6,0"
+                                                        FontSize="13"
+                                                        FontWeight="Bold"
+                                                        Text="●">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#34C759" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#FF3B30" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock
+                                                        FontSize="15"
+                                                        FontWeight="Bold"
+                                                        Foreground="#1D1D1F"
+                                                        Text="{Binding AxisName}" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!--  Row 1：轴号  -->
+                                            <Border Grid.Row="1">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="#8E8E93"
+                                                    Text="{Binding AxisId}" />
+                                            </Border>
+
+                                            <!--  Row 2：电机型号  -->
+                                            <Border Grid.Row="2">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="#6E6E73"
+                                                    Text="{Binding MotorModel}" />
+                                            </Border>
+
+                                            <!--  Row 3：绝对位置（重点监视·大号加粗）  -->
+                                            <Border Grid.Row="3">
+                                                <Border.Style>
                                                     <Style TargetType="Border">
-                                                        <Setter Property="BorderBrush" Value="#E5E5EA" />
-                                                        <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                                        <Setter Property="Background" Value="#EBF5FF" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsNearLimit}" Value="True">
+                                                                <Setter Property="Background" Value="#FFF0F0" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
                                                     </Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="HorizontalAlignment" Value="Center" />
-                                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                                        <Setter Property="FontSize" Value="14" />
-                                                        <Setter Property="FontWeight" Value="Bold" />
-                                                        <Setter Property="Foreground" Value="#1D1D1F" />
-                                                    </Style>
-                                                </Grid.Resources>
+                                                </Border.Style>
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="24"
+                                                    FontWeight="Bold"
+                                                    Foreground="#007AFF"
+                                                    Text="{Binding CurrentPosition, StringFormat={}{0:F3}}" />
+                                            </Border>
 
-                                                <!--  Row 0: 轴名称 + 运行状态指示灯  -->
-                                                <Border Grid.Row="0" Background="#FAFAFA">
-                                                    <StackPanel
-                                                        HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center"
-                                                        Orientation="Horizontal">
-                                                        <!--  运行状态灯：绿色=停止，红色=运行中  -->
-                                                        <TextBlock
-                                                            Margin="0,0,5,0"
-                                                            FontSize="14"
-                                                            FontWeight="Bold"
-                                                            Text="●">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="#34C759" />
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                                                                            <Setter Property="Foreground" Value="#FF3B30" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                        <TextBlock
-                                                            FontSize="15"
-                                                            FontWeight="Bold"
-                                                            Foreground="#1D1D1F"
-                                                            Text="{Binding AxisName}" />
-                                                    </StackPanel>
-                                                </Border>
+                                            <!--  Row 4：速度（重点监视·加粗）  -->
+                                            <Border Grid.Row="4" Background="#F2F2F7">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="18"
+                                                    FontWeight="Bold"
+                                                    Foreground="#1D1D1F"
+                                                    Text="{Binding Velocity, StringFormat={}{0:F3}}" />
+                                            </Border>
 
-                                                <!--  Row 1: 轴号  -->
-                                                <Border Grid.Row="1">
-                                                    <TextBlock
-                                                        FontSize="13"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#86868B"
-                                                        Text="{Binding AxisId}" />
-                                                </Border>
-
-                                                <!--  Row 2: 电机型号  -->
-                                                <Border Grid.Row="2">
-                                                    <TextBlock
-                                                        FontSize="13"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#86868B"
-                                                        Text="{Binding MotorModel}" />
-                                                </Border>
-
-                                                <!--  Row 3: 绝对位置  -->
-                                                <Border Grid.Row="3">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="BorderBrush" Value="#E5E5EA" />
-                                                            <Setter Property="BorderThickness" Value="0,0,0,1" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsNearLimit}" Value="True">
-                                                                    <Setter Property="Background" Value="#FEF0F0" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <StackPanel
-                                                        HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center"
-                                                        Orientation="Horizontal">
-                                                        <TextBlock
-                                                            FontSize="18"
-                                                            FontWeight="Bold"
-                                                            Foreground="#0071E3"
-                                                            Text="{Binding CurrentPosition, StringFormat={}{0:F3}}" />
-                                                        <TextBlock
-                                                            Margin="2,0,0,0"
-                                                            VerticalAlignment="Bottom"
-                                                            FontSize="11"
-                                                            FontWeight="Regular"
-                                                            Foreground="#86868B"
-                                                            Text="{Binding PosUnit}" />
-                                                    </StackPanel>
-                                                </Border>
-
-                                                <!--  Row 4: 速度  -->
-                                                <Border Grid.Row="4">
-                                                    <StackPanel
-                                                        HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center"
-                                                        Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Velocity, StringFormat={}{0:F3}}" />
-                                                        <TextBlock
-                                                            Margin="2,0,0,0"
-                                                            FontSize="11"
-                                                            FontWeight="Regular"
-                                                            Foreground="#86868B"
-                                                            Text="{Binding VelUnit}" />
-                                                    </StackPanel>
-                                                </Border>
-
-                                                <!--  Row 5: 限位  -->
-                                                <Border Grid.Row="5">
-                                                    <TextBlock Text="{Binding LimitDisplay}" />
-                                                </Border>
-
-                                                <!--  Row 6: 速度限位  -->
-                                                <Border Grid.Row="6">
-                                                    <TextBlock Text="{Binding VelocityLimitDisplay}" />
-                                                </Border>
-
-                                                <!--  Row 7: 加速系数  -->
-                                                <Border Grid.Row="7">
-                                                    <TextBlock Text="{Binding Acceleration}" />
-                                                </Border>
-                                                <!--  Row 8: 减速系数  -->
-                                                <Border Grid.Row="8">
-                                                    <TextBlock Text="{Binding Deceleration}" />
-                                                </Border>
-                                                <!--  Row 9: 螺距  -->
-                                                <Border Grid.Row="9">
-                                                    <TextBlock Text="{Binding Pitch}" />
-                                                </Border>
-                                                <!--  Row 10: 细分  -->
-                                                <Border Grid.Row="10" BorderThickness="0">
-                                                    <TextBlock Text="{Binding Division}" />
-                                                </Border>
-                                            </Grid>
-                                        </Border>
+                                            <!--  Row 5~10：静态配置（交替底色·统一加粗）  -->
+                                            <Border Grid.Row="5">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="Bold"
+                                                    Foreground="#3A3A3C"
+                                                    Text="{Binding LimitDisplay, Mode=OneWay}" />
+                                            </Border>
+                                            <Border Grid.Row="6" Background="#F8F8FA">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="Bold"
+                                                    Foreground="#3A3A3C"
+                                                    Text="{Binding VelocityLimitDisplay, Mode=OneWay}" />
+                                            </Border>
+                                            <Border Grid.Row="7">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="Bold"
+                                                    Foreground="#6E6E73"
+                                                    Text="{Binding Acceleration}" />
+                                            </Border>
+                                            <Border Grid.Row="8" Background="#F8F8FA">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="Bold"
+                                                    Foreground="#6E6E73"
+                                                    Text="{Binding Deceleration}" />
+                                            </Border>
+                                            <Border Grid.Row="9">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="Bold"
+                                                    Foreground="#6E6E73"
+                                                    Text="{Binding Pitch}" />
+                                            </Border>
+                                            <Border Grid.Row="10" Background="#F8F8FA">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="Bold"
+                                                    Foreground="#6E6E73"
+                                                    Text="{Binding Division}" />
+                                            </Border>
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -477,7 +480,6 @@
                             Command="{Binding HomeAllAxesCommand}"
                             Content="复位原点"
                             Style="{StaticResource MaterialButton}">
-
                             <Button.ToolTip>
                                 <TextBlock Width="200" TextWrapping="Wrap">
                                     控制六轴同时返回默认工作位置。<LineBreak />
@@ -485,7 +487,6 @@
                                     当前所有轴将以同步方式启动，
                                     并自动运动至预设归位坐标。</TextBlock>
                             </Button.ToolTip>
-
                         </Button>
 
                         <Button
@@ -494,7 +495,6 @@
                             Command="{Binding TestAllAxesCommand}"
                             Content="往返运动测试"
                             Style="{StaticResource MaterialButton}">
-
                             <Button.ToolTip>
                                 <TextBlock Width="200" TextWrapping="Wrap">
                                     执行六轴限位往返测试。<LineBreak />
@@ -502,7 +502,6 @@
                                     各轴将依次执行：<LineBreak />
                                     上限位 → 下限位 → 默认位置</TextBlock>
                             </Button.ToolTip>
-
                         </Button>
 
                         <Button
@@ -511,7 +510,6 @@
                             Command="{Binding EmergencyStopCommand}"
                             Content="紧 急 停 止"
                             Style="{StaticResource DangerButton}">
-
                             <Button.ToolTip>
                                 <TextBlock Width="200" TextWrapping="Wrap">
                                     立即向全部轴发送停止指令。<LineBreak />
@@ -519,7 +517,6 @@
                                     执行后：<LineBreak />
                                     所有正在运动的轴将尝试立即停止。</TextBlock>
                             </Button.ToolTip>
-
                         </Button>
                     </UniformGrid>
                 </StackPanel>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <robot name="SAMCS">
 
-  <!-- 第一个连杆：基座框架 -->
+  <!-- 基座框架：保持原始灰色 -->
   <link name="baselink_framework">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -14,7 +14,7 @@
     </visual>
   </link>
 
-  <!-- 第二个连杆 -->
+  <!-- R轴电机：钢蓝 -->
   <link name="link1_motor1_R">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -22,7 +22,7 @@
         <mesh filename="meshes/link1_motor1_R.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="0.224 0.522 0.749 1" />
       </material>
     </visual>
   </link>
@@ -35,7 +35,7 @@
     <axis xyz="0 0 0" />
   </joint>
 
-  <!-- 第三个连杆 -->
+  <!-- Y轴滑块：哑光橙 -->
   <link name="link2_motor2_Y">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -43,7 +43,7 @@
         <mesh filename="meshes/link2_motor2_Y.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="0.878 0.424 0.224 1" />
       </material>
     </visual>
   </link>
@@ -56,7 +56,7 @@
     <axis xyz="0 0 1" />
   </joint>
 
-  <!-- 第四个连杆 -->
+  <!-- X轴横梁：钢蓝 -->
   <link name="link3_motor3_X">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -64,7 +64,7 @@
         <mesh filename="meshes/link3_motor3_X.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="0.224 0.522 0.749 1" />
       </material>
     </visual>
   </link>
@@ -78,7 +78,7 @@
     <limit lower="0" upper="0.2" effort="0" velocity="0" />
   </joint>
 
-  <!-- 第五个连杆 -->
+  <!-- Z轴立柱：哑光橙 -->
   <link name="link4_motor4_Z">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -86,7 +86,7 @@
         <mesh filename="meshes/link4_motor4_Z.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="0.878 0.424 0.224 1" />
       </material>
     </visual>
   </link>
@@ -100,7 +100,7 @@
     <limit lower="0" upper="0.2" effort="0" velocity="0" />
   </joint>
 
-  <!-- 第六个连杆 -->
+  <!-- P轴俯仰：钢蓝 -->
   <link name="link5_motor5_P">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -108,7 +108,7 @@
         <mesh filename="meshes/link5_motor5_P.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="0.224 0.522 0.749 1" />
       </material>
     </visual>
   </link>
@@ -122,7 +122,7 @@
     <limit lower="0" upper="0.075" effort="0" velocity="0" />
   </joint>
 
-  <!-- 第七个连杆 -->
+  <!-- I轴植入：哑光橙 -->
   <link name="link6_motor6_I">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -130,7 +130,7 @@
         <mesh filename="meshes/link6_motor6_I.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="0.878 0.424 0.224 1" />
       </material>
     </visual>
   </link>
@@ -144,7 +144,7 @@
     <limit lower="0" upper="1.5708" effort="0" velocity="0" />
   </joint>
 
-  <!-- 第八个连杆 -->
+  <!-- 夹具：钛白 -->
   <link name="link7_clamp">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -152,7 +152,7 @@
         <mesh filename="meshes/link7_clamp.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="0.878 0.894 0.91 1" />
       </material>
     </visual>
   </link>
@@ -166,7 +166,7 @@
     <limit lower="0" upper="0.05" effort="0" velocity="0" />
   </joint>
 
-  <!-- 第九个连杆：工具末端坐标系 -->
+  <!-- 探针：金 -->
   <link name="Probe">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -174,7 +174,7 @@
         <mesh filename="meshes/Probe.STL" />
       </geometry>
       <material name="6061">
-        <color rgba="0.8 0.8 0.8 1" />
+        <color rgba="1.0 0.0 0.0 1" />
       </material>
     </visual>
   </link>
