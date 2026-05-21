@@ -27,6 +27,14 @@ namespace SAMCS_WPF.Services
         bool IsConnected { get; }
 
         /// <summary>
+        /// 是否处于紧急停止锁定状态。
+        /// true = 急停已触发，系统锁死，拒绝一切运动指令。
+        /// false = 正常状态，允许运动。
+        /// 必须调用 ResetEmergencyStop() 才能解锁。
+        /// </summary>
+        bool IsEmergencyStopped { get; }
+
+        /// <summary>
         /// 获取六轴静态定义列表。
         /// 返回的数据包含每个轴的名称、限位值、归位坐标等产品规格参数。
         /// ViewModel 用这个列表来初始化 UI 显示的轴参数。
@@ -65,10 +73,18 @@ namespace SAMCS_WPF.Services
 
         /// <summary>
         /// 紧急停止 —— 向全部六个轴同时发送 Stop 指令。
-        /// 不等待、不轮询，瞬间群发。
+        /// 同时取消所有正在运行的异步运动任务，并将系统锁定为急停状态。
+        /// 锁死后拒绝一切新运动指令，直到调用 ResetEmergencyStop() 解锁。
         /// 注意：这是同步方法，执行极快，不需要 async。
         /// </summary>
         void EmergencyStop();
+
+        /// <summary>
+        /// 解除紧急停止锁定状态。
+        /// 调用后 IsEmergencyStopped 恢复为 false，允许下发新的运动指令。
+        /// 不恢复电机使能，不自动运动——仅解除软件层面的指令封锁。
+        /// </summary>
+        void ResetEmergencyStop();
 
         /// <summary>
         /// 高频实时数据读取 —— 每 100ms 调用一次。

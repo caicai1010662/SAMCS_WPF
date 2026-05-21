@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using MyRobotSDK.Controllers;
 using MyRobotSDK.Models;
@@ -39,6 +40,29 @@ namespace SAMCS_WPF.Services
         /// AxisWorkflowService 通过它来操作电机，不直接碰 SDK 的 RobotController。
         /// </summary>
         private readonly IRobotControlService _robotService;
+
+        // ===================== 运动任务取消与急停状态 =====================
+
+        /// <summary>
+        /// 取消令牌源 —— 串联"急停按钮"和"运动任务"的桥梁。
+        /// 当 TestAllAxesAsync 或 HomeAllAxesAsync 启动时，创建新的 CTS。
+        /// 当 EmergencyStop 被调用时，触发 Cancel，通知运动任务立即终止。
+        /// 为什么需要这个字段：
+        ///   没有 CTS 的话，运动任务内部的 for 循环和 Task.Delay
+        ///   完全不知道外面已经按了急停，会继续执行后续轴的运动。
+        /// </summary>
+        private CancellationTokenSource? _cts;
+
+        /// <summary>
+        /// 急停锁定状态标记。
+        /// true = 急停已触发，拒绝一切新运动指令。
+        /// false = 正常状态，允许运动。
+        /// 为什么用独立的 bool 而不是只依赖 CTS：
+        ///   CTS 是"这一次任务"的取消信号，任务结束后 CTS 就失效了。
+        ///   急停状态是"系统级"的锁定，即使任务已经终止，
+        ///   也必须阻止新任务启动，直到操作者手动复位。
+        /// </summary>
+        private bool _isEmergencyStopped;
 
         // ===================== 六轴产品规格（静态配置） =====================
 
@@ -80,8 +104,6 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[0].SoftLimitMax = 180.000f;
             _axisDefinitions[0].SoftVelocityLimit = 5;
             _axisDefinitions[0].HomePosition = 0f;
-            _axisDefinitions[0].PosUnit = "°";
-            _axisDefinitions[0].VelUnit = "°/s";
 
             // 轴 2: Y 前后平移轴
             _axisDefinitions[1] = new AxisDefinition();
@@ -93,8 +115,6 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[1].SoftLimitMax = 200.000f;
             _axisDefinitions[1].SoftVelocityLimit = 5;
             _axisDefinitions[1].HomePosition = 100f;
-            _axisDefinitions[1].PosUnit = "mm";
-            _axisDefinitions[1].VelUnit = "mm/s";
 
             // 轴 3: X 左右平移轴
             _axisDefinitions[2] = new AxisDefinition();
@@ -106,8 +126,6 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[2].SoftLimitMax = 200.000f;
             _axisDefinitions[2].SoftVelocityLimit = 5;
             _axisDefinitions[2].HomePosition = 100f;
-            _axisDefinitions[2].PosUnit = "mm";
-            _axisDefinitions[2].VelUnit = "mm/s";
 
             // 轴 4: Z 上下平移轴
             _axisDefinitions[3] = new AxisDefinition();
@@ -119,8 +137,6 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[3].SoftLimitMax = 75.000f;
             _axisDefinitions[3].SoftVelocityLimit = 5;
             _axisDefinitions[3].HomePosition = 32.5f;
-            _axisDefinitions[3].PosUnit = "mm";
-            _axisDefinitions[3].VelUnit = "mm/s";
 
             // 轴 5: P 俯仰轴
             _axisDefinitions[4] = new AxisDefinition();
@@ -132,8 +148,6 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[4].SoftLimitMax = 90.000f;
             _axisDefinitions[4].SoftVelocityLimit = 5;
             _axisDefinitions[4].HomePosition = 45f;
-            _axisDefinitions[4].PosUnit = "°";
-            _axisDefinitions[4].VelUnit = "°/s";
 
             // 轴 6: I 植入轴
             _axisDefinitions[5] = new AxisDefinition();
@@ -145,8 +159,6 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[5].SoftLimitMax = 50;
             _axisDefinitions[5].SoftVelocityLimit = 5;
             _axisDefinitions[5].HomePosition = 10f;
-            _axisDefinitions[5].PosUnit = "mm";
-            _axisDefinitions[5].VelUnit = "mm/s";
         }
 
         // ===================== 属性 =====================
@@ -229,6 +241,30 @@ namespace SAMCS_WPF.Services
             _robotService.Dispose();
         }
 
+        // ===================== 急停状态管理 =====================
+
+        /// <summary>
+        /// 当前是否处于紧急停止锁定状态。
+        /// </summary>
+        public bool IsEmergencyStopped
+        {
+            get { return _isEmergencyStopped; }
+        }
+
+        /// <summary>
+        /// 解除紧急停止锁定状态。
+        /// 调用后 IsEmergencyStopped 恢复为 false，允许下发新的运动指令。
+        /// 不恢复电机使能，不自动运动——仅解除软件层面的指令封锁。
+        ///
+        /// 为什么解除操作是独立方法而不是自动恢复：
+        ///   工业安全规范要求急停后必须由操作者明确确认"危险已解除"，
+        ///   不能由软件自动判断恢复时机。
+        /// </summary>
+        public void ResetEmergencyStop()
+        {
+            _isEmergencyStopped = false;
+        }
+
         // ===================== 六轴同步归位 =====================
 
         /// <summary>
@@ -244,95 +280,133 @@ namespace SAMCS_WPF.Services
         ///   第二步：对所有轴同时下发归位运动指令（不等待单轴完成）
         ///   第三步：轮询等待，直到所有轴全部停止
         ///
-        /// async/await 说明：
-        ///   这是一个 async Task 方法。
-        ///   第三步的轮询中用 await Task.Delay(50) 每 50ms 检查一次。
-        ///   每次 await 都会把控制权还给 UI 线程，所以 UI 不会卡住。
+        /// CancellationToken 说明：
+        ///   方法内部创建新的 CTS，通过 _cts 字段暴露给 EmergencyStop。
+        ///   每一步等待都传入 token，确保急停时能瞬间中断。
+        ///   方法结束时在 finally 中清理 _cts。
         /// </summary>
         public async Task HomeAllAxesAsync()
         {
-            // ===== 第一步：统一设定所有轴的速度 =====
-            for (int i = 0; i < _axisDefinitions.Length; i++)
+            // ===== 入口急停状态检查 =====
+            if (_isEmergencyStopped)
             {
-                AxisDefinition def = _axisDefinitions[i];
-                float targetSpeed = 5f;
-
-                // 【安全限位】速度不能超过 SoftVelocityLimit（硬限制，超了就禁止下发）
-                if (targetSpeed > def.SoftVelocityLimit)
-                {
-                    System.Windows.MessageBox.Show(
-                        def.AxisName + " 速度超过安全限位！\n" +
-                        "允许范围：[0, " + def.SoftVelocityLimit + "]\n" +
-                        "目标速度：" + targetSpeed,
-                        "安全限位保护",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-                    return;
-                }
-
-                // 通过安全检查，下发速度设定指令
-                _robotService.GetAxis(def.Axis).SetVelocity(targetSpeed);
+                System.Windows.MessageBox.Show(
+                    "系统处于紧急停止锁定状态！\n请先解除急停锁定后再执行归位操作。",
+                    "操作被拒绝",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                return;
             }
 
-            // ===== 第二步：同时下发所有轴的运动指令 =====
-            // axisEnums 数组用于第三步的轮询等待
-            RobotAxis[] axisEnums = new RobotAxis[_axisDefinitions.Length];
+            // 创建新的取消令牌源，同时保存到字段中
+            // 为什么每次调用都要新建 CTS：
+            //   CTS 只能 Cancel 一次，Cancel 后就废了。
+            //   下次运动任务需要一个全新的 CTS。
+            CancellationTokenSource cts = new CancellationTokenSource();
+            _cts = cts;
+            CancellationToken token = cts.Token;
 
-            for (int i = 0; i < _axisDefinitions.Length; i++)
+            try
             {
-                AxisDefinition def = _axisDefinitions[i];
-                float targetPos = def.HomePosition;
-
-                // 【安全限位】目标位置必须在 [SoftLimitMin, SoftLimitMax] 内
-                if (targetPos < def.SoftLimitMin || targetPos > def.SoftLimitMax)
+                // ===== 第一步：统一设定所有轴的速度 =====
+                for (int i = 0; i < _axisDefinitions.Length; i++)
                 {
-                    System.Windows.MessageBox.Show(
-                        def.AxisName + " 目标位置超过安全限位！\n" +
-                        "允许范围：[" + def.SoftLimitMin + ", " + def.SoftLimitMax + "]\n" +
-                        "目标位置：" + targetPos,
-                        "安全限位保护",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-                    return;
+                    // 每一次循环迭代前检查是否已被取消
+                    token.ThrowIfCancellationRequested();
+
+                    AxisDefinition def = _axisDefinitions[i];
+                    float targetSpeed = 5f;
+
+                    _robotService.GetAxis(def.Axis).SetVelocity(targetSpeed);
                 }
 
-                axisEnums[i] = def.Axis;
-                _robotService.GetAxis(def.Axis).MoveAbsolute(targetPos);
-            }
+                // 设速之后再次检查取消信号（急停可能在设速期间触发）
+                token.ThrowIfCancellationRequested();
 
-            // ===== 第三步：轮询等待所有轴停止 =====
-            // 每 50ms 检查一次所有轴是否都已停止
-            // 使用 while(true) + break 的写法，方便在循环中加调试断点
-            while (true)
-            {
-                bool anyRunning = false;
+                // ===== 第二步：同时下发所有轴的运动指令 =====
+                RobotAxis[] axisEnums = new RobotAxis[_axisDefinitions.Length];
 
-                // 检查所有轴是否有任何一个还在运行
-                for (int i = 0; i < axisEnums.Length; i++)
+                for (int i = 0; i < _axisDefinitions.Length; i++)
                 {
-                    if (_robotService.GetAxis(axisEnums[i]).IsRunning())
+                    token.ThrowIfCancellationRequested();
+
+                    AxisDefinition def = _axisDefinitions[i];
+                    float targetPos = def.HomePosition;
+
+                    // 【安全限位】目标位置必须在 [SoftLimitMin, SoftLimitMax] 内
+                    if (targetPos < def.SoftLimitMin || targetPos > def.SoftLimitMax)
                     {
-                        anyRunning = true;
-                        break;  // 只要有一个还在运行，就不用继续检查了
+                        System.Windows.MessageBox.Show(
+                            def.AxisName + " 目标位置超过安全限位！\n" +
+                            "允许范围：[" + def.SoftLimitMin + ", " + def.SoftLimitMax + "]\n" +
+                            "目标位置：" + targetPos,
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
                     }
+
+                    axisEnums[i] = def.Axis;
+                    _robotService.GetAxis(def.Axis).MoveAbsolute(targetPos);
                 }
 
-                // 全部停止 → 退出循环
-                if (!anyRunning)
+                // ===== 第三步：轮询等待所有轴停止 =====
+                // 每 50ms 检查一次，每次等待都传入 token
+                while (true)
                 {
-                    break;
+                    // 检查取消信号（急停可能在等待期间触发）
+                    token.ThrowIfCancellationRequested();
+
+                    bool anyRunning = false;
+
+                    for (int i = 0; i < axisEnums.Length; i++)
+                    {
+                        if (_robotService.GetAxis(axisEnums[i]).IsRunning())
+                        {
+                            anyRunning = true;
+                            break;
+                        }
+                    }
+
+                    if (!anyRunning)
+                    {
+                        break;
+                    }
+
+                    // 传入 token：急停时这个 Delay 会立即抛出异常退出，
+                    // 不需要等完 50ms
+                    await Task.Delay(50, token);
                 }
 
-                // 还有轴在运行 → 等 50ms 再检查
-                // await 让出 UI 线程，50ms 后自动回到这里继续执行
-                await Task.Delay(50);
+                // 归位完成
+                System.Windows.MessageBox.Show(
+                    "六轴同步归位完成！", "提示",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             }
-
-            // 归位完成，通知操作者
-            System.Windows.MessageBox.Show(
-                "六轴同步归位完成！", "提示",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            catch (OperationCanceledException)
+            {
+                // 急停触发导致的任务取消，这是正常流程，不弹窗不报错
+                // 急停处理已在 EmergencyStop() 中完成（Stop 指令 + 状态锁定）
+            }
+            finally
+            {
+                // 无论正常完成还是被急停打断，都要清理 CTS
+                // Dispose 前先检查是否就是当前这个 CTS，
+                // 防止覆盖其他任务新创建的 CTS
+                if (_cts == cts)
+                {
+                    _cts = null;
+                }
+                try
+                {
+                    cts.Dispose();
+                }
+                catch
+                {
+                    // Dispose 异常不影响流程
+                }
+            }
         }
 
         // ===================== 六轴限位往返测试 =====================
@@ -354,149 +428,208 @@ namespace SAMCS_WPF.Services
         ///   测试时需要单独观察每个轴的运动情况。
         ///   同时运动会让人看不清哪个轴出了问题。
         ///
-        /// async/await 说明：
-        ///   每段运动的等待（while + await Task.Delay）都不阻塞 UI。
-        ///   每段间的 3 秒延时也用了 await Task.Delay(3000)，
-        ///   这 3 秒内 UI 仍然可以响应（比如点紧急停止按钮）。
+        /// CancellationToken 说明：
+        ///   每个轴的每段运动前都检查 token，急停下瞬间跳出循环。
+        ///   所有 await Task.Delay 都传入 token，3 秒延时能被瞬间打断。
+        ///   方法结束时在 finally 中清理 _cts。
         /// </summary>
         public async Task TestAllAxesAsync()
         {
-            // ===== 统一设定所有轴的速度 =====
-            for (int i = 0; i < _axisDefinitions.Length; i++)
+            // ===== 入口急停状态检查 =====
+            // 如果系统已处于急停锁定，直接拒绝，不创建 CTS
+            if (_isEmergencyStopped)
             {
-                AxisDefinition def = _axisDefinitions[i];
-                float targetSpeed = 5f;
-
-                // 【安全限位】速度硬限制检查
-                if (targetSpeed > def.SoftVelocityLimit)
-                {
-                    System.Windows.MessageBox.Show(
-                        def.AxisName + " 速度超过安全限位！\n" +
-                        "允许范围：[0, " + def.SoftVelocityLimit + "]\n" +
-                        "目标速度：" + targetSpeed,
-                        "安全限位保护",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-                    return;
-                }
-
-                _robotService.GetAxis(def.Axis).SetVelocity(targetSpeed);
+                System.Windows.MessageBox.Show(
+                    "系统处于紧急停止锁定状态！\n请先解除急停锁定后再执行测试。",
+                    "操作被拒绝",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                return;
             }
 
-            // ===== 逐轴执行三段往返运动 =====
-            for (int i = 0; i < _axisDefinitions.Length; i++)
+            // 创建新的取消令牌源
+            CancellationTokenSource cts = new CancellationTokenSource();
+            _cts = cts;
+            CancellationToken token = cts.Token;
+
+            try
             {
-                AxisDefinition def = _axisDefinitions[i];
-                AxisController controller = _robotService.GetAxis(def.Axis);
-
-                // ------ 往：运动到上限位 ------
-                float targetMax = def.SoftLimitMax;
-
-                // 【安全限位】上限位值本身也应该在有效范围内
-                if (targetMax < def.SoftLimitMin || targetMax > def.SoftLimitMax)
+                // ===== 统一设定所有轴的速度 =====
+                for (int i = 0; i < _axisDefinitions.Length; i++)
                 {
-                    System.Windows.MessageBox.Show(
-                        def.AxisName + " 目标位置超过安全限位！\n" +
-                        "允许范围：[" + def.SoftLimitMin + ", " + def.SoftLimitMax + "]\n" +
-                        "目标位置：" + targetMax,
-                        "安全限位保护",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-                    return;
+                    token.ThrowIfCancellationRequested();
+
+                    AxisDefinition def = _axisDefinitions[i];
+                    float targetSpeed = 5f;
+
+                    _robotService.GetAxis(def.Axis).SetVelocity(targetSpeed);
                 }
 
-                // 下发运动指令
-                controller.MoveAbsolute(targetMax);
+                // 设速完成后再次检查取消信号
+                token.ThrowIfCancellationRequested();
 
-                // 等待运动完成 —— 轮询 IsRunning()，每 50ms 检查一次
-                // await 让每次等待都不阻塞 UI 线程
-                while (controller.IsRunning())
+                // ===== 逐轴执行三段往返运动 =====
+                for (int i = 0; i < _axisDefinitions.Length; i++)
                 {
-                    await Task.Delay(50);
+                    // 每个轴开始前检查是否被取消
+                    // 这是最关键的一行：急停后不会再进入下一个轴的循环
+                    token.ThrowIfCancellationRequested();
+
+                    AxisDefinition def = _axisDefinitions[i];
+                    AxisController controller = _robotService.GetAxis(def.Axis);
+
+                    // ------ 往：运动到上限位 ------
+                    float targetMax = def.SoftLimitMax;
+
+                    // 下发运动指令
+                    controller.MoveAbsolute(targetMax);
+
+                    // 等待运动完成 —— 轮询 IsRunning()
+                    // 每 50ms 检查一次，同时检查取消信号
+                    while (controller.IsRunning())
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.Delay(50, token);
+                    }
+
+                    // 到位后延时 3 秒，让操作者有时间观察机械位置
+                    // 传入 token：急停时这个 3 秒等待被瞬间打断，不需要死等
+                    await Task.Delay(3000, token);
+
+                    // ------ 返：运动到下限位 ------
+                    float targetMin = def.SoftLimitMin;
+
+                    // 急停可能在上面的安全检查期间触发
+                    token.ThrowIfCancellationRequested();
+
+                    controller.MoveAbsolute(targetMin);
+
+                    // 等待运动完成，每次检查取消信号
+                    while (controller.IsRunning())
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.Delay(50, token);
+                    }
+
+                    // 到位后延时 3 秒，带 token
+                    await Task.Delay(3000, token);
+
+                    // ------ 归：回到默认归位 ------
+                    float homePos = def.HomePosition;
+
+                    if (homePos < def.SoftLimitMin || homePos > def.SoftLimitMax)
+                    {
+                        System.Windows.MessageBox.Show(
+                            def.AxisName + " 目标位置超过安全限位！\n" +
+                            "允许范围：[" + def.SoftLimitMin + ", " + def.SoftLimitMax + "]\n" +
+                            "目标位置：" + homePos,
+                            "安全限位保护",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    token.ThrowIfCancellationRequested();
+
+                    controller.MoveAbsolute(homePos);
+
+                    // 等待运动完成
+                    while (controller.IsRunning())
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.Delay(50, token);
+                    }
+
+                    // 到位后延时 3 秒，带 token
+                    await Task.Delay(3000, token);
                 }
 
-                // 到位后延时 3 秒，让操作者有时间观察机械位置
-                await Task.Delay(3000);
-
-                // ------ 返：运动到下限位 ------
-                float targetMin = def.SoftLimitMin;
-
-                // 【安全限位】下限位值也应该在有效范围内
-                if (targetMin < def.SoftLimitMin || targetMin > def.SoftLimitMax)
-                {
-                    System.Windows.MessageBox.Show(
-                        def.AxisName + " 目标位置超过安全限位！\n" +
-                        "允许范围：[" + def.SoftLimitMin + ", " + def.SoftLimitMax + "]\n" +
-                        "目标位置：" + targetMin,
-                        "安全限位保护",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-                    return;
-                }
-
-                controller.MoveAbsolute(targetMin);
-
-                // 等待运动完成
-                while (controller.IsRunning())
-                {
-                    await Task.Delay(50);
-                }
-
-                // 到位后延时 3 秒
-                await Task.Delay(3000);
-
-                // ------ 归：回到默认归位 ------
-                float homePos = def.HomePosition;
-
-                // 【安全限位】归位坐标必须在限位范围内
-                if (homePos < def.SoftLimitMin || homePos > def.SoftLimitMax)
-                {
-                    System.Windows.MessageBox.Show(
-                        def.AxisName + " 目标位置超过安全限位！\n" +
-                        "允许范围：[" + def.SoftLimitMin + ", " + def.SoftLimitMax + "]\n" +
-                        "目标位置：" + homePos,
-                        "安全限位保护",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-                    return;
-                }
-
-                controller.MoveAbsolute(homePos);
-
-                // 等待运动完成
-                while (controller.IsRunning())
-                {
-                    await Task.Delay(50);
-                }
-
-                // 到位后延时 3 秒
-                await Task.Delay(3000);
+                // 六轴测试全部完成
+                System.Windows.MessageBox.Show(
+                    "六轴限位往返测试完成！", "提示",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             }
-
-            // 六轴测试全部完成
-            System.Windows.MessageBox.Show(
-                "六轴限位往返测试完成！", "提示",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            catch (OperationCanceledException)
+            {
+                // 急停触发导致的任务取消，正常流程，不弹窗
+            }
+            finally
+            {
+                // 清理 CTS
+                if (_cts == cts)
+                {
+                    _cts = null;
+                }
+                try
+                {
+                    cts.Dispose();
+                }
+                catch
+                {
+                    // Dispose 异常不影响流程
+                }
+            }
         }
 
         // ===================== 紧急停止 =====================
 
         /// <summary>
-        /// 紧急停止 —— 向全部轴瞬间群发 Stop 指令。
-        /// 不等待、不轮询、不检查。
-        /// 六个轴的 Stop 指令在同一个循环中连续发出，间隔极短。
+        /// 紧急停止 —— 三件事必须同时做：
+        ///   1. 取消所有正在运行的异步运动任务（TestAllAxesAsync / HomeAllAxesAsync）
+        ///   2. 向全部六个轴瞬间群发 Stop 指令
+        ///   3. 将系统锁定为急停状态，拒绝一切新运动指令
         ///
-        /// 这是同步方法（不是 async Task），因为 Stop 指令下发极快，
-        /// 不需要等待，也不应该被 await 打断。
+        /// 三件事的顺序不能乱：
+        ///   先 Cancel（通知任务退出循环），再发 Stop（硬件停止），最后锁状态（防止新任务）。
+        ///   如果先发 Stop 再 Cancel，任务可能刚好在 Stop 后、Cancel 前
+        ///   进入下一个轴的循环，导致后续轴继续运动。
+        ///
+        /// try-catch 包围 _cts?.Cancel() 的原因：
+        ///   Cancel 会触发所有注册的回调和等待中的 Task.Delay，
+        ///   极端情况下可能抛出 AggregateException 或 ObjectDisposedException。
+        ///   这些异常不应该阻止后续的 Stop 指令下发。
         /// </summary>
         public void EmergencyStop()
         {
+            // ===== 步骤 1：取消所有正在运行的运动任务 =====
+            // 这会让 TestAllAxesAsync / HomeAllAxesAsync 中的
+            // token.ThrowIfCancellationRequested() 和 await Task.Delay(..., token)
+            // 立即抛出 OperationCanceledException，终止整个运动序列
+            try
+            {
+                if (_cts != null)
+                {
+                    _cts.Cancel();
+                }
+            }
+            catch (AggregateException)
+            {
+                // Cancel 触发的 Task.Delay 取消异常，正常现象，吞掉
+            }
+            catch (ObjectDisposedException)
+            {
+                // 极端情况：CTS 已被 Dispose，说明任务早已结束，无需处理
+            }
+
+            // ===== 步骤 2：群发 Stop 指令到全部六个轴 =====
             for (int i = 0; i < _axisDefinitions.Length; i++)
             {
-                // 向每个轴发送停止指令
-                _robotService.GetAxis(_axisDefinitions[i].Axis).Stop();
+                try
+                {
+                    _robotService.GetAxis(_axisDefinitions[i].Axis).Stop();
+                }
+                catch
+                {
+                    // 单个轴 Stop 失败不阻断其他轴的 Stop 下发
+                    // 原因：急停时硬件可能已处于异常状态，
+                    // 不能因为一个轴通信失败就放弃其他轴的停止
+                }
             }
+
+            // ===== 步骤 3：锁定系统为急停状态 =====
+            // 此后任何运动指令（归位、测试）在入口处直接拒绝
+            _isEmergencyStopped = true;
         }
 
         // ===================== 高频实时数据读取（100ms） =====================

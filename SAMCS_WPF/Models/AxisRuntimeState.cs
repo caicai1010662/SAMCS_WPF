@@ -73,11 +73,5 @@ namespace SAMCS_WPF.Models
         /// </summary>
         public int Division { get; set; }
 
-        /// <summary>
-        /// SDK 读取的实际电机型号字符串。
-        /// 连接时用于校验，校验通过后显示在 UI 的"电机型号"栏。
-        /// 注意：这个字段只在连接校验时填充，高频刷新（ReadRealtime）不会读取它。
-        /// </summary>
-        public string MotorModel { get; set; } = "";
     }
 }

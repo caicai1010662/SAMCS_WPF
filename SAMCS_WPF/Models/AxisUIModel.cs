@@ -30,13 +30,13 @@ namespace SAMCS_WPF.Models
         // ===================== 位置与速度 =====================
 
         /// <summary>
-        /// 当前位置值（单位由 PosUnit 决定）
+        /// 当前位置值（mm 或 °）
         /// </summary>
         [ObservableProperty]
         private float _currentPosition;
 
         /// <summary>
-        /// 当前设定速度值（单位由 VelUnit 决定）
+        /// 当前设定速度值（mm/s 或 °/s）
         /// </summary>
         [ObservableProperty]
         private float _velocity;
@@ -47,20 +47,6 @@ namespace SAMCS_WPF.Models
         /// </summary>
         [ObservableProperty]
         private bool _isRunning;
-
-        // ===================== 单位标识 =====================
-
-        /// <summary>
-        /// 位置单位（° 或 mm）
-        /// </summary>
-        [ObservableProperty]
-        private string _posUnit = "";
-
-        /// <summary>
-        /// 速度单位（°/s 或 mm/s）
-        /// </summary>
-        [ObservableProperty]
-        private string _velUnit = "";
 
         // ===================== 软限位 =====================
 

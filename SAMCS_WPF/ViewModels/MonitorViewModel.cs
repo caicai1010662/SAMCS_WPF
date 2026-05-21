@@ -127,10 +127,11 @@ namespace SAMCS_WPF.ViewModels
         /// 串口连接/断开切换按钮。
         /// 点击后：
         ///   如果已连接 → 断开连接
-        ///   如果未连接 → 建立连接 + 校验电机型号 + 启动定时刷新
+        ///   如果未连接 → 建立连接 + 校验电机型号 + 启动定时刷新 + 解除急停锁定
         ///
-        /// 连接的实际工作委托给 AxisWorkflowService.ConnectAndValidate()。
-        /// ViewModel 只做：调服务 → 检查结果 → 更新状态 → 启停定时器。
+        /// 连接时自动清除急停锁定的原因：
+        ///   重新连接意味着操作者已经检查了硬件状态，
+        ///   此时解除急停锁定是安全合理的。
         /// </summary>
         [RelayCommand]
         private void ToggleConnection()
@@ -145,35 +146,38 @@ namespace SAMCS_WPF.ViewModels
                 // 当前未连接 → 执行连接流程
                 try
                 {
-                    // 安全检查：确保用户已选择串口（避免 SelectedPort 为空）
                     string port = SelectedPort;
-                    if (port == null || port.Length == 0)
+                    if (port.Length == 0)
                     {
                         System.Windows.MessageBox.Show("请先选择通讯串口！");
                         return;
                     }
 
-                    // 委托工作流服务执行物理连接与型号校验
-                    // 所有连接细节（串口参数、校验逻辑）都在服务内部
                     _workflowService.ConnectAndValidate(port);
 
-                    // 连接完成后检查服务是否真正连上了
-                    // 如果型号校验失败，服务内部会断开连接，这里会检测到 false
                     if (!_workflowService.IsConnected)
                     {
                         IsConnected = false;
                         return;
                     }
 
-                    // 校验通过：立即读一次配置参数 + 启动两个轮询定时器
+                    // 连接成功 → 清除急停锁定状态（重新连接意味着操作者已确认安全）
+                    _workflowService.ResetEmergencyStop();
+
+                    // 先标记已连接，再读取参数——
+                    // 因为 UpdateAxisConfiguration() 内部有 IsConnected 守卫检查，
+                    // 如果 IsConnected=false 会直接返回导致读到空数据
+                    IsConnected = true;
+
+                    // 立即读取一次配置参数，让 UI 上的加速/减速/螺距/细分立刻显示真实值
                     UpdateAxisConfiguration();
+
+                    // 启动两个轮询定时器
                     _refreshTimer.Start();
                     _configTimer.Start();
-                    IsConnected = true;
                 }
                 catch (Exception ex)
                 {
-                    // 任何未预料的异常都弹窗提示，不让程序悄悄崩溃
                     System.Windows.MessageBox.Show("连接异常: " + ex.Message);
                 }
             }
@@ -196,9 +200,19 @@ namespace SAMCS_WPF.ViewModels
                 return;
             }
 
+            // 急停锁定检查 —— 在 ViewModel 层拦截，不创建 async 状态机
+            if (_workflowService.IsEmergencyStopped)
+            {
+                System.Windows.MessageBox.Show(
+                    "系统处于紧急停止锁定状态！\n请重新连接设备以解除急停锁定。",
+                    "操作被拒绝",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                // 所有运动逻辑委托给服务层执行
                 await _workflowService.HomeAllAxesAsync();
             }
             catch (Exception ex)
@@ -221,9 +235,19 @@ namespace SAMCS_WPF.ViewModels
                 return;
             }
 
+            // 急停锁定检查 —— 在 ViewModel 层拦截
+            if (_workflowService.IsEmergencyStopped)
+            {
+                System.Windows.MessageBox.Show(
+                    "系统处于紧急停止锁定状态！\n请重新连接设备以解除急停锁定。",
+                    "操作被拒绝",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                // 所有测试逻辑委托给服务层执行
                 await _workflowService.TestAllAxesAsync();
             }
             catch (Exception ex)
@@ -234,8 +258,11 @@ namespace SAMCS_WPF.ViewModels
 
         /// <summary>
         /// 紧急停止按钮。
-        /// 向全部六个轴同时发送 Stop 指令。
-        /// 不等待、不轮询，直接群发。
+        /// 委托给 AxisWorkflowService.EmergencyStop()：
+        ///   - 取消所有正在运行的异步运动任务（归位/测试）
+        ///   - 向全部六个轴群发 Stop 指令
+        ///   - 将系统锁定为急停状态，拒绝一切新运动指令
+        /// 锁定后必须重新连接设备才能解除。
         /// </summary>
         [RelayCommand]
         private void EmergencyStop()
@@ -248,6 +275,17 @@ namespace SAMCS_WPF.ViewModels
             try
             {
                 _workflowService.EmergencyStop();
+
+                // 急停触发后，UI 上立即告知操作者系统已锁定
+                System.Windows.MessageBox.Show(
+                    "紧急停止已触发！\n\n" +
+                    "1. 所有六轴已停止运动\n" +
+                    "2. 运动任务已被取消\n" +
+                    "3. 系统已锁定，拒绝一切运动指令\n\n" +
+                    "请检查硬件状态，确认安全后重新连接设备以解除锁定。",
+                    "紧急停止",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
@@ -275,14 +313,14 @@ namespace SAMCS_WPF.ViewModels
             // 2. 从服务获取六轴产品定义，创建 UI 绑定的 AxisUIModel 列表
             InitializeAxesFromDefinitions();
 
-            // 3. 创建 100ms 高频刷新定时器（不立即启动）
+            // 3. 创建 50ms 高频刷新定时器（不立即启动）
             _refreshTimer = new DispatcherTimer();
-            _refreshTimer.Interval = TimeSpan.FromMilliseconds(100);
+            _refreshTimer.Interval = TimeSpan.FromMilliseconds(50);
             _refreshTimer.Tick += OnRefreshTimerTick;
 
-            // 4. 创建 60s 低频配置刷新定时器（不立即启动）
+            // 4. 创建 600s 低频配置刷新定时器（不立即启动）
             _configTimer = new DispatcherTimer();
-            _configTimer.Interval = TimeSpan.FromSeconds(60);
+            _configTimer.Interval = TimeSpan.FromSeconds(600);
             _configTimer.Tick += OnConfigTimerTick;
         }
 
@@ -354,8 +392,6 @@ namespace SAMCS_WPF.ViewModels
                 axisUI.AxisName = def.AxisName;
                 axisUI.AxisId = def.AxisId;
                 axisUI.MotorModel = def.ExpectedMotorModel;
-                axisUI.PosUnit = def.PosUnit;
-                axisUI.VelUnit = def.VelUnit;
                 axisUI.SoftLimitMin = def.SoftLimitMin;
                 axisUI.SoftLimitMax = def.SoftLimitMax;
                 axisUI.SoftVelocityLimit = def.SoftVelocityLimit;
@@ -462,8 +498,9 @@ namespace SAMCS_WPF.ViewModels
             _refreshTimer.Stop();
             _configTimer.Stop();
 
-            // 步骤二：断开硬件连接
+            // 步骤二：断开硬件连接（同时清除急停锁定状态）
             _workflowService.Disconnect();
+            _workflowService.ResetEmergencyStop();
 
             // 步骤三：更新 UI 状态
             IsConnected = false;

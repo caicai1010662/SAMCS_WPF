@@ -14,6 +14,8 @@
     <Platforms>AnyCPU;x64</Platforms>
     <!-- x64 强制——ftcoreimc.dll 仅提供 64 位版本，AnyCPU 编译也会锁定 x64 -->
     <PlatformTarget>x64</PlatformTarget>
+    <!-- 应用程序图标：显示在 exe 文件、任务栏和主窗口标题栏 -->
+    <ApplicationIcon>assets\SAMCS.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!--
@@ -34,6 +36,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
     <PackageReference Include="System.IO.Ports" Version="10.0.7" />
   </ItemGroup>
 
@@ -47,17 +50,61 @@
   </ItemGroup>
 
   <!--
-    URDF 和 STL 资产文件——CopyToOutputDirectory=PreserveNewest：
-    只在文件更新时复制，避免每次重建都拷贝 5.5MB 的 STL 文件集合。
+    3D 资产文件（HTML + JS + URDF + STL）跟随输出目录。
+    运行时 WebView2 虚拟主机映射到 bin 下的 3D/ 子目录，
+    不再依赖源码目录查找。
   -->
   <ItemGroup>
-    <Content Include="assets\Monitor\meshes\*.STL">
+    <!-- Runtime：Three.js 网页 + JS 库 -->
+    <Content Include="3D\Runtime\index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>assets\Monitor\meshes\%(Filename)%(Extension)</Link>
     </Content>
-    <Content Include="assets\Monitor\SAMCS.urdf">
+    <Content Include="3D\Runtime\js\three.module.min.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>assets\Monitor\%(Filename)%(Extension)</Link>
+    </Content>
+    <Content Include="3D\Runtime\js\OrbitControls.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Runtime\js\STLLoader.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Runtime\js\URDFLoader.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Runtime\js\URDFClasses.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Model：URDF 结构定义 -->
+    <Content Include="3D\Model\SAMCS.urdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Model：STL 三维网格（9 个） -->
+    <Content Include="3D\Model\meshes\baselink_framework.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\link1_motor1_R.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\link2_motor2_Y.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\link3_motor3_X.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\link4_motor4_Z.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\link5_motor5_P.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\link6_motor6_I.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\link7_clamp.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3D\Model\meshes\Probe.STL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

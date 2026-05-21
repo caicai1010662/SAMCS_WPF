@@ -26,12 +26,12 @@ namespace SAMCS_WPF.ViewModels
         /// </summary>
         public string SelectedPage
         {
-            get => _selectedPage;
+            get { return _selectedPage; }
             set
             {
                 if (SetProperty(ref _selectedPage, value))
                 {
-                    OnPropertyChanged(nameof(CurrentView));
+                    // 通知三个 Tab 的 IsChecked 绑定 + 三个 View 的 Visibility 绑定刷新
                     OnPropertyChanged(nameof(IsMonitorSelected));
                     OnPropertyChanged(nameof(IsStereotaxicSelected));
                     OnPropertyChanged(nameof(IsImplantSelected));
@@ -39,16 +39,36 @@ namespace SAMCS_WPF.ViewModels
             }
         }
 
+        // ===================== 子 ViewModel 暴露 =====================
+        //
+        // 白话文说明：之前用 DataTemplate 时，WPF 会自动把 ViewModel 赋给 View 的 DataContext。
+        // 现在改成三个 View 直接写在 XAML 里，需要手动绑定 DataContext。
+        // 这三个属性就是给 XAML 绑定用的：DataContext="{Binding MonitorVM}"。
+        //
+
         /// <summary>
-        /// 当前显示的子 ViewModel，由 ContentControl 通过 DataTemplate 自动匹配对应 View
+        /// 状态监控页 ViewModel（供 MonitorView 绑定 DataContext）
         /// </summary>
-        public object CurrentView => SelectedPage switch
+        public MonitorViewModel MonitorVM
         {
-            "Monitor" => _monitorVM,
-            "Stereotaxic" => _stereotaxicVM,
-            "Implant" => _implantVM,
-            _ => _monitorVM
-        };
+            get { return _monitorVM; }
+        }
+
+        /// <summary>
+        /// 脑立体定向页 ViewModel（供 StereotaxicView 绑定 DataContext）
+        /// </summary>
+        public StereotaxicViewModel StereotaxicVM
+        {
+            get { return _stereotaxicVM; }
+        }
+
+        /// <summary>
+        /// 微电极植入页 ViewModel（供 ImplantView 绑定 DataContext）
+        /// </summary>
+        public ImplantViewModel ImplantVM
+        {
+            get { return _implantVM; }
+        }
 
         /// <summary>
         /// "状态监控" Tab 选中状态

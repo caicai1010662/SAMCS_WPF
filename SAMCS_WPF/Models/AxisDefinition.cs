@@ -47,21 +47,19 @@ namespace SAMCS_WPF.Models
         public string ExpectedMotorModel { get; set; } = "";
 
         /// <summary>
-        /// 软下限位 —— 轴允许运动的最小位置值。
+        /// 软下限位 —— 轴允许运动的最小位置值（° 或 mm）。
         /// 任何 MoveAbsolute 的目标位置如果小于这个值，会被安全限位检查拦截。
-        /// 单位由 PosUnit 决定（° 或 mm）。
         /// </summary>
         public float SoftLimitMin { get; set; }
 
         /// <summary>
-        /// 软上限位 —— 轴允许运动的最大位置值。
-        /// 任何 MoveAbsolute 的目标位置如果大于这个值，会被安全限位检查拦截。
+        /// 软上限位 —— 轴允许运动的最大位置值（° 或 mm）。
         /// </summary>
         public float SoftLimitMax { get; set; }
 
         /// <summary>
-        /// 速度软限位 —— 所有轴统一的最大允许速度。
-        /// 当前为 5 mm/s 或 5 °/s，由硬件安全规范决定。
+        /// 速度软限位 —— 所有轴统一的最大允许速度（°/s 或 mm/s）。
+        /// 当前为 5，由硬件安全规范决定。
         /// SetVelocity() 时如果传入的值超过这个限制，会硬性阻止。
         /// </summary>
         public float SoftVelocityLimit { get; set; } = 5f;
@@ -71,19 +69,5 @@ namespace SAMCS_WPF.Models
         /// 这个值必须在 [SoftLimitMin, SoftLimitMax] 范围内。
         /// </summary>
         public float HomePosition { get; set; }
-
-        /// <summary>
-        /// 位置单位字符串。
-        /// 旋转轴用 "°"（度），平移轴用 "mm"（毫米）。
-        /// 显示在 UI 的位置值后面，比如 "100.000 mm"。
-        /// </summary>
-        public string PosUnit { get; set; } = "";
-
-        /// <summary>
-        /// 速度单位字符串。
-        /// 旋转轴用 "°/s"（度每秒），平移轴用 "mm/s"（毫米每秒）。
-        /// 显示在 UI 的速度值后面。
-        /// </summary>
-        public string VelUnit { get; set; } = "";
     }
 }
