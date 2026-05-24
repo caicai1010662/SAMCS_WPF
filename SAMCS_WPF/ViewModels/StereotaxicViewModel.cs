@@ -8,7 +8,6 @@ namespace SAMCS_WPF.ViewModels
     /// </summary>
     public partial class StereotaxicViewModel : ObservableObject
     {
-        // 预留给子页面硬件操作
         private readonly IRobotControlService _robotService;
 
         public StereotaxicViewModel(IRobotControlService robotService)

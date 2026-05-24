@@ -1,9 +1,9 @@
 <!--
     StereotaxicView — 脑立体定向页面。
-    
+
     布局：
-    左侧 50%：预留区域
-    右侧 50%：预留区域
+    左侧 40%：WebView2 加载 3D 小鼠颅骨模型（SkullViewer.html + MouseSkull.glb）
+    右侧 60%：脑立体定向功能面板（预留）
 -->
 <UserControl
     x:Class="SAMCS_WPF.Views.StereotaxicView"
@@ -11,14 +11,36 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="600"
-    d:DesignWidth="1000"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+    d:DesignHeight="750"
+    d:DesignWidth="1100"
+    Background="#F5F5F7"
     mc:Ignorable="d">
 
-    <Grid>
+    <Grid Margin="15">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0.5*" />
-            <ColumnDefinition Width="0.5*" />
+            <ColumnDefinition Width="4*" />
+            <ColumnDefinition Width="6*" />
         </Grid.ColumnDefinitions>
+
+        <!--  左侧：3D 颅骨模型渲染区  -->
+        <Border Grid.Column="0" Margin="0,0,15,0">
+            <wv2:WebView2 x:Name="WebViewSkull" DefaultBackgroundColor="Transparent" />
+        </Border>
+
+        <!--  右侧：功能面板（预留）  -->
+        <Border
+            Grid.Column="1"
+            Background="White"
+            CornerRadius="12"
+            BorderThickness="0">
+            <Border.Effect>
+                <DropShadowEffect
+                    BlurRadius="15"
+                    Direction="270"
+                    Opacity="0.04"
+                    ShadowDepth="2" />
+            </Border.Effect>
+        </Border>
     </Grid>
 </UserControl>

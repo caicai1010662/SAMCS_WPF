@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <title>Skull Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        #viewport {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            border-radius: 14px;
+            background: #1a1a2e;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* ---------- 左上角折叠控制面板 ---------- */
+        #ctrl-panel {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 10;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #ctrl-toggle {
+            height: 28px;
+            padding: 0 10px;
+            background: rgba(30, 30, 46, 0.85);
+            color: #CCCCCC;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            white-space: nowrap;
+        }
+
+        #ctrl-toggle:hover {
+            background: rgba(50, 50, 70, 0.9);
+            color: #FFFFFF;
+        }
+
+        #ctrl-body {
+            display: none;
+            margin-top: 4px;
+            padding: 10px;
+            background: rgba(30, 30, 46, 0.88);
+            border-radius: 6px;
+            min-width: 320px;
+        }
+
+        #ctrl-body.open {
+            display: block;
+        }
+
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+
+        .ctrl-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .pose-label {
+            color: #8899AA;
+            font-size: 11px;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            width: 24px;
+            text-align: right;
+        }
+
+        .pose-input {
+            width: 56px;
+            height: 26px;
+            background: #2A2A3E;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            outline: none;
+        }
+
+        .pose-input:focus {
+            outline: 1px solid #3A6BD0;
+        }
+
+        .pose-step-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .pose-step-btn {
+            width: 16px;
+            height: 13px;
+            background: #3A3A50;
+            color: #CCCCCC;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 7px;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pose-step-btn:hover {
+            background: #4A4A60;
+            color: #FFFFFF;
+        }
+
+        .pose-step-btn:active {
+            background: #5A5A70;
+        }
+
+        .ctrl-unit {
+            color: #889999;
+            font-size: 10px;
+            width: 18px;
+        }
+
+        #pose-apply {
+            height: 28px;
+            padding: 0 16px;
+            background: #3A6BD0;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        #pose-apply:hover { background: #4A7BE0; }
+        #pose-apply:active { background: #2A5BC0; }
+
+        #pose-toggle-axes {
+            height: 24px;
+            padding: 0 8px;
+            background: #3A3A50;
+            color: #CCCCCC;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        #pose-toggle-axes:hover { background: #4A4A60; }
+    </style>
+</head>
+
+<body>
+    <div id="viewport">
+        <!--  左上角折叠控制面板  -->
+        <div id="ctrl-panel">
+            <button id="ctrl-toggle">+ 坐标与控制</button>
+            <div id="ctrl-body">
+                <!--  坐标轴/栅格  -->
+                <div class="ctrl-row">
+                    <button id="pose-toggle-axes">+ 坐标轴/栅格</button>
+                </div>
+                <!--  AP  -->
+                <div class="ctrl-row">
+                    <span class="pose-label">AP</span>
+                    <input class="pose-input" id="pose-ap" type="text" value="0.000" />
+                    <div class="pose-step-wrap">
+                        <button class="pose-step-btn" data-param="ap" data-delta="0.001">▲</button>
+                        <button class="pose-step-btn" data-param="ap" data-delta="-0.001">▼</button>
+                    </div>
+                    <span class="ctrl-unit">mm</span>
+                </div>
+                <!--  ML  -->
+                <div class="ctrl-row">
+                    <span class="pose-label">ML</span>
+                    <input class="pose-input" id="pose-ml" type="text" value="0.000" />
+                    <div class="pose-step-wrap">
+                        <button class="pose-step-btn" data-param="ml" data-delta="0.001">▲</button>
+                        <button class="pose-step-btn" data-param="ml" data-delta="-0.001">▼</button>
+                    </div>
+                    <span class="ctrl-unit">mm</span>
+                </div>
+                <!--  DV  -->
+                <div class="ctrl-row">
+                    <span class="pose-label">DV</span>
+                    <input class="pose-input" id="pose-dv" type="text" value="0.000" />
+                    <div class="pose-step-wrap">
+                        <button class="pose-step-btn" data-param="dv" data-delta="0.001">▲</button>
+                        <button class="pose-step-btn" data-param="dv" data-delta="-0.001">▼</button>
+                    </div>
+                    <span class="ctrl-unit">mm</span>
+                </div>
+                <!--  Rot  -->
+                <div class="ctrl-row">
+                    <span class="pose-label">Rot</span>
+                    <input class="pose-input" id="pose-rot" type="text" value="0.0" style="width:48px" />
+                    <div class="pose-step-wrap">
+                        <button class="pose-step-btn" data-param="rot" data-delta="1.0">▲</button>
+                        <button class="pose-step-btn" data-param="rot" data-delta="-1.0">▼</button>
+                    </div>
+                    <span class="ctrl-unit">°</span>
+                </div>
+                <!--  Pitch  -->
+                <div class="ctrl-row">
+                    <span class="pose-label">Pit</span>
+                    <input class="pose-input" id="pose-pitch" type="text" value="0.0" style="width:48px" />
+                    <div class="pose-step-wrap">
+                        <button class="pose-step-btn" data-param="pitch" data-delta="1.0">▲</button>
+                        <button class="pose-step-btn" data-param="pitch" data-delta="-1.0">▼</button>
+                    </div>
+                    <span class="ctrl-unit">°</span>
+                </div>
+                <!--  应用  -->
+                <div class="ctrl-row">
+                    <span class="pose-label"></span>
+                    <button id="pose-apply">应用</button>
+                </div>
+                <!--  颅骨切除 + 刷新  -->
+                <div class="ctrl-row">
+                    <span class="pose-label"></span>
+                    <button id="btn-craniotomy" style="height:28px;padding:0 12px;background:#8B3A3A;color:#FFF;border:none;border-radius:3px;cursor:pointer;font-size:11px;">颅骨切除 1.5mm</button>
+                    <button id="btn-refresh" style="height:28px;padding:0 12px;background:#3A3A50;color:#CCC;border:none;border-radius:3px;cursor:pointer;font-size:11px;">刷新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./js/three.module.min.js",
+                "three/examples/jsm/controls/OrbitControls.js": "./js/OrbitControls.js",
+                "three/examples/jsm/loaders/GLTFLoader.js": "./js/GLTFLoader.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+        // ====== 可调参数汇总（按需搜索关键字跳转） ======
+        //   场景外观  → 搜索 "2. 渲染器" / "4. 布光" / "5. 圆形地面"
+        //   摄像机    → 搜索 "3. 摄像机"
+        //   颅骨材质  → 搜索 "SKULL_COLOR"
+        //   标记球    → 搜索 "markerConfigs"
+        //   定位针    → 搜索 "_createNeedleModel"
+        //   坐标轴    → 搜索 "_createStereotaxicAxes"
+        //   颅骨切除  → 搜索 "craniotomyCut"
+        //   步进按钮  → 搜索 "data-delta" (HTML 中)
+
+        // ===================== 1. 安全锁死 =====================
+        window.addEventListener('contextmenu', e => e.preventDefault(), { capture: true });
+        window.addEventListener('keydown', e => {
+            if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 'r') || e.key === 'BrowserRefresh') {
+                e.preventDefault(); e.stopPropagation();
+            }
+        }, { capture: true });
+
+        // ===================== 2. 渲染器 =====================
+        const viewport = document.getElementById('viewport');
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        viewport.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xBADDFC);
+        scene.fog = new THREE.Fog(0x5ba0d0, 4, 14);
+
+        // ===================== 3. 摄像机 =====================
+        const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.01, 100);
+        camera.position.set(0, 2, 1.5);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 2;
+        controls.maxDistance = 3.2;
+        controls.target.set(0, 0, 0);
+        controls.minPolarAngle = 0.5;
+        controls.maxPolarAngle = 1.0;
+        controls.enabled = true;      // 允许鼠标交互
+        controls.enablePan = false;   // 禁止拖动平移，仅允许旋转+缩放
+        controls.update();
+
+        // 左下角迷你坐标轴（挂在摄像机上，始终可见）
+        const _miniLen = 0.022;  // 迷你轴长
+        const _miniR = 0.006;    // 箭头半径
+        const _miniH = 0.010;    // 箭头高
+        const miniAxes = new THREE.Group();
+        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(), _miniLen, 0x00CC66, _miniH, _miniR)); // AP 绿
+        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0),  new THREE.Vector3(), _miniLen, 0xFF3333, _miniH, _miniR)); // ML 红
+        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(), _miniLen, 0x3388FF, _miniH, _miniR)); // DV 蓝
+        // 放在屏幕左下：相机局部坐标 X 负(左) Y 负(下) Z 负(前)
+        miniAxes.position.set(-0.035, -0.024, -0.12);
+        camera.add(miniAxes);
+
+        // ===================== 4. 布光 =====================
+        // 半球光：天空冷白 + 地面浅肉色，暗部模拟组织漫反射反光
+        scene.add(new THREE.HemisphereLight(0xffffff, 0xebd9d3, 0.5));
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        keyLight.position.set(4, 6, 3);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.set(1024, 1024);
+        keyLight.shadow.camera.near = 0.1;
+        keyLight.shadow.camera.far = 20;
+        keyLight.shadow.camera.left = -2;
+        keyLight.shadow.camera.right = 2;
+        keyLight.shadow.camera.top = 2;
+        keyLight.shadow.camera.bottom = -2;
+        keyLight.shadow.bias = -0.0003;
+        scene.add(keyLight);
+
+        const rimLight = new THREE.DirectionalLight(0x8899cc, 1.0);
+        rimLight.position.set(-4, 3, -4);
+        scene.add(rimLight);
+
+        // ===================== 5. 圆形地面 =====================
+        const groundPlane = new THREE.Mesh(
+            new THREE.CircleGeometry(1.1, 48),
+            new THREE.MeshStandardMaterial({ color: 0x333840, roughness: 0.85, metalness: 0.05 })
+        );
+        groundPlane.rotation.x = -Math.PI / 2;
+        groundPlane.position.y = -0.5;
+        groundPlane.receiveShadow = true;
+        scene.add(groundPlane);
+
+        // ===================== 6. 控制台中继到 C# =====================
+        // 劫持 console 方法，通过 postMessage 发送到 C# Debug 输出
+        const _log = console.log.bind(console);
+        const _err = console.error.bind(console);
+        const _warn = console.warn.bind(console);
+
+        function postMsg(level, args) {
+            try {
+                window.chrome.webview.postMessage(JSON.stringify({
+                    level: level,
+                    text: Array.from(args).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')
+                }));
+            } catch (e) { /* 忽略序列化错误 */ }
+        }
+
+        console.log = function () { _log.apply(null, arguments); postMsg('log', arguments); };
+        console.error = function () { _err.apply(null, arguments); postMsg('error', arguments); };
+        console.warn = function () { _warn.apply(null, arguments); postMsg('warn', arguments); };
+
+        // 全局 JS 异常捕获
+        window.addEventListener('error', function (e) {
+            console.error('全局异常: ' + e.message + ' @ ' + e.filename + ':' + e.lineno);
+        });
+
+        // ===================== 7. 加载 GLB 模型 =====================
+        // 【可调参数】模型在场景中的目标显示尺寸（单位：米）
+        // 加载后会根据包围盒最大边自动等比缩放，使模型恰好适配此尺寸
+        // 调小 = 模型缩小，调大 = 模型放大
+        const MODEL_TARGET_SIZE = 1.0;
+
+        let _skullModel = null;
+        let _modelLoaded = false;
+        let _initialScale = 1.0;
+        let _boxCenter = null;
+        let _boxSize = null;
+        let _markerNodes = [];
+        let _markerSpheres = [];
+        let _needleGroup = null;
+        let _axisGroup = null;              // 脑立体坐标系 (AP/ML/DV 三轴 + 栅格)
+        let _axisBaseScale = 1.0;           // 坐标系创建时的 _mmToWorldScale，供缩放用
+        let _mmToWorldScale = 0.001;        // mm→世界米 换算系数（加载后据 Bregma-Lambda 实测更新）
+        let _cameraLockedToNeedle = false;  // 相机是否跟随针尖
+        // DOM 缓存：位姿输入框，_initPoseBar 中初始化
+        let _elAp = null, _elMl = null, _elDv = null, _elRot = null, _elPit = null;
+        const loader = new GLTFLoader();
+
+        // 自动检测运行环境：WebView2 用虚拟主机，普通浏览器用相对路径
+        const isWebView2 = typeof window.chrome !== 'undefined' && window.chrome.webview !== undefined;
+        const modelUrl = isWebView2
+            ? 'https://samcs-model.local/MouseSkull_4.21mm.glb'
+            : '../Model/MouseSkull_4.21mm.glb';
+        console.log('运行环境: ' + (isWebView2 ? 'WebView2' : '浏览器调试') + ' URL=' + modelUrl);
+
+        loader.load(modelUrl,
+            (gltf) => {
+                console.log('GLB 加载完成，场景子节点数=' + gltf.scene.children.length);
+                _skullModel = gltf.scene;
+                _modelLoaded = true;
+
+                // 【可调参数】颅骨 PBR 材质：方案一 标准干骨质感
+                const SKULL_COLOR = 0xe6e2d6;   // 骨白色（偏暖象牙色）
+                const SKULL_METALNESS = 0.0;        // 骨骼绝缘体，零金属感
+                const SKULL_ROUGHNESS = 0.65;       // 微糙表面，漫反射强
+
+                _skullModel.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        // 关闭顶点色，否则 material.color 不生效
+                        if (child.material.vertexColors !== undefined) {
+                            child.material.vertexColors = false;
+                        }
+                        child.material.color = new THREE.Color(SKULL_COLOR);
+                        child.material.metalness = SKULL_METALNESS;
+                        child.material.roughness = SKULL_ROUGHNESS;
+                        child.material.side = THREE.DoubleSide;  // 颅骨内部可见
+                        console.log('  Mesh: ' + (child.name || '(未命名)'));
+                    }
+                });
+
+                // 用包围盒自动计算模型尺寸和位置
+                const box = new THREE.Box3().setFromObject(_skullModel);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+                // 保存为全局变量，供后续缩放操作使用
+                _boxSize = size.clone();
+                _boxCenter = center.clone();
+                console.log('包围盒: 尺寸=(' + size.x.toFixed(3) + ', ' + size.y.toFixed(3) + ', ' + size.z.toFixed(3) + ')'
+                    + ' 中心=(' + center.x.toFixed(3) + ', ' + center.y.toFixed(3) + ', ' + center.z.toFixed(3) + ')');
+
+                // 【可调参数】地面高度，必须和圆形地面的 position.y 保持一致
+                const GROUND_Y = -0.25;
+
+                // 自动缩放：以包围盒最大边为基准，等比缩放至目标尺寸
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = MODEL_TARGET_SIZE / maxDim;
+                _initialScale = scale;  // 保存初始缩放值，供 resetSkullScale 使用
+                _skullModel.scale.setScalar(scale);
+                console.log('自动缩放: 最大边=' + maxDim.toFixed(3) + ' → 目标=' + MODEL_TARGET_SIZE.toFixed(3) + ' 比例=' + scale.toFixed(4));
+
+                // 自动放置：XZ 居中，Y 贴地（模型底部对齐地面）
+                // Three.js 变换顺序：先缩放再平移，所以 world_y = position.y + scale * local_y
+                // 贴地公式：position.y = GROUND_Y - scale * center.y + scale * size.y / 2
+                _skullModel.position.set(
+                    -scale * center.x,
+                    GROUND_Y - scale * center.y + scale * size.y / 2,
+                    -scale * center.z
+                );
+                console.log('贴地放置: 位置=(' + _skullModel.position.x.toFixed(3) + ', ' + _skullModel.position.y.toFixed(3) + ', ' + _skullModel.position.z.toFixed(3) + ')');
+
+                scene.add(_skullModel);
+
+                // 颅骨解剖标记点渲染：5 个球逐个配置
+                // 每个标记点独立定义半径和材质参数
+                //
+                // 【调参指南 — 所有尺寸单位均为 mm】
+                //   radius  → 球半径 (mm)
+                //   color   → 表面颜色 (0xRRGGBB)
+                //   emissive→ 自发光颜色，暗处也能看到
+                //   roughness → 粗糙度 (0=镜面, 1=磨砂)
+                //   metalness → 金属度 (0=塑料, 1=金属)
+                const markerConfigs = [
+                    // Point_1_Bregma — 前囟（基准原点）
+                    { name: 'Point_1_Bregma', radius: 9.5, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
+                    // Point_2_Lambda — 人字缝（后囟）
+                    { name: 'Point_2_Lambda', radius: 9.5, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
+                    // Point_3_Midpoint — 前后囟中点
+                    { name: 'Point_3_Midpoint', radius: 15, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
+                    // Point_4_MidLeft — 左侧中点
+                    { name: 'Point_4_MidLeft', radius: 13, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
+                    // Point_5_MidRight — 右侧中点
+                    { name: 'Point_5_MidRight', radius: 11.5, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 }
+                ];
+
+                for (let i = 0; i < markerConfigs.length; i++) {
+                    const cfg = markerConfigs[i];
+                    const pointNode = _skullModel.getObjectByName(cfg.name);
+                    if (pointNode) {
+                        // 逐个创建几何体和材质，每个球独立可调
+                        const radiusM = cfg.radius / 1000.0;  // mm 转 米
+                        const geom = new THREE.SphereGeometry(radiusM, 16, 16);
+                        const mat = new THREE.MeshStandardMaterial({
+                            color: cfg.color,
+                            roughness: cfg.roughness,
+                            metalness: cfg.metalness,
+                            emissive: cfg.emissive,
+                            emissiveIntensity: 0.5
+                        });
+                        const sphere = new THREE.Mesh(geom, mat);
+                        // 球放在场景根下，用世界坐标定位，不受颅骨缩放影响
+                        const worldPos = new THREE.Vector3();
+                        pointNode.getWorldPosition(worldPos);
+                        sphere.position.copy(worldPos);
+                        sphere.castShadow = true;
+                        scene.add(sphere);
+                        // 保存引用，供缩放后更新位置
+                        _markerNodes.push(pointNode);
+                        _markerSpheres.push(sphere);
+                        console.log('标记点 ' + cfg.name + ': 世界坐标=('
+                            + worldPos.x.toFixed(3) + ', ' + worldPos.y.toFixed(3) + ', ' + worldPos.z.toFixed(3) + ')');
+                    }
+                }
+
+                // 创建定位针模型
+                _needleGroup = _createNeedleModel();
+                // 初始位置设到 Bregma 点
+                if (_markerSpheres.length > 0) {
+                    _needleGroup.position.copy(_markerSpheres[0].position);
+                }
+                scene.add(_needleGroup);
+
+                // 根据已创建的标记球，计算 mm→世界米 的真实换算系数
+                // Bregma(索引0) 和 Lambda(索引1) 在 GLB 中相距 4.21mm
+                if (_markerSpheres.length >= 2) {
+                    var worldDist = _markerSpheres[0].position.distanceTo(_markerSpheres[1].position);
+                    _mmToWorldScale = worldDist / 4.21;
+                    console.log('换算系数: 1mm = ' + _mmToWorldScale.toFixed(6) + ' 世界米 (Bregma-Lambda 世界距='
+                        + worldDist.toFixed(3) + 'm / 4.21mm)');
+                }
+
+                // 脑立体坐标系：以前囟为原点，三色轴标注 AP / ML / DV
+                _axisGroup = _createStereotaxicAxes();
+                scene.add(_axisGroup);
+
+                // 初始化底部控制条按钮事件
+                _initPoseBar();
+            },
+            (progress) => {
+                if (progress.total > 0) {
+                    const pct = Math.round(progress.loaded / progress.total * 100);
+                    console.log('加载进度: ' + pct + '%');
+                }
+            },
+            (err) => console.error('GLB 加载失败: ' + (err.message || err))
+        );
+
+        // ===================== 8A. C# 调用接口 =====================
+
+        // 获取模型基本信息
+        window.getModelInfo = () => JSON.stringify({
+            loaded: _modelLoaded,
+            meshCount: _skullModel ? _skullModel.children.length : 0
+        });
+
+        // ---------- 颅骨缩放 ----------
+
+        // 根据实测 Bregma-Lambda 距离缩放颅骨模型
+        // realDistanceMM: 真实小鼠前后囟距离，单位毫米
+        window.setBregmaLambdaDistance = (realDistanceMM) => {
+            if (!_modelLoaded) {
+                return JSON.stringify({ ok: false, error: '模型尚未加载' });
+            }
+            if (_markerSpheres.length < 2) {
+                return JSON.stringify({ ok: false, error: '未找到 Bregma/Lambda 标记点' });
+            }
+
+            // 用 Bregma (索引 0) 和 Lambda (索引 1) 的当前世界坐标算距离
+            var bregmaPos = _markerSpheres[0].position;
+            var lambdaPos = _markerSpheres[1].position;
+            var dx = lambdaPos.x - bregmaPos.x;
+            var dy = lambdaPos.y - bregmaPos.y;
+            var dz = lambdaPos.z - bregmaPos.z;
+            var currentDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            var targetDist = realDistanceMM / 1000.0;
+
+            if (currentDist < 0.0001) {
+                return JSON.stringify({ ok: false, error: '当前 Bregma-Lambda 距离过小' });
+            }
+
+            var scaleFactor = targetDist / currentDist;
+            _skullModel.scale.multiplyScalar(scaleFactor);
+
+            // 缩放改变后，重新计算颅骨位置（贴地公式依赖 scale）
+            var newScale = _skullModel.scale.x;
+            var GROUND_Y = -0.25;
+            _skullModel.position.set(
+                -newScale * _boxCenter.x,
+                GROUND_Y - newScale * _boxCenter.y + newScale * _boxSize.y / 2,
+                -newScale * _boxCenter.z
+            );
+
+            // 更新 5 个标记球的世界位置
+            _updateAllMarkerPositions();
+
+            console.log('颅骨缩放: 实测距离=' + realDistanceMM.toFixed(2) + 'mm, '
+                + '旧距离=' + (currentDist * 1000).toFixed(2) + 'mm, '
+                + '缩放因子=' + scaleFactor.toFixed(4));
+
+            return JSON.stringify({
+                ok: true,
+                scaleFactor: scaleFactor,
+                oldDistMM: currentDist * 1000,
+                newDistMM: realDistanceMM
+            });
+        };
+
+        // 恢复颅骨到初始自动缩放比例
+        window.resetSkullScale = () => {
+            if (!_modelLoaded) {
+                return JSON.stringify({ ok: false, error: '模型尚未加载' });
+            }
+
+            // 先除以当前 scale，再乘回 _initialScale
+            var currentScale = _skullModel.scale.x;
+            var resetFactor = _initialScale / currentScale;
+            _skullModel.scale.setScalar(_initialScale);
+
+            // 重新贴地
+            var GROUND_Y = -0.25;
+            _skullModel.position.set(
+                -_initialScale * _boxCenter.x,
+                GROUND_Y - _initialScale * _boxCenter.y + _initialScale * _boxSize.y / 2,
+                -_initialScale * _boxCenter.z
+            );
+
+            _updateAllMarkerPositions();
+
+            console.log('颅骨缩放已重置，恢复因子=' + resetFactor.toFixed(4));
+
+            return JSON.stringify({ ok: true, scale: _initialScale });
+        };
+
+        // ---------- 定位针控制 ----------
+
+        // 更新定位针尖端位置（世界坐标，单位米）
+        // 当相机锁定时，同时更新轨道中心，使视角始终跟随针尖
+        window.updateNeedlePosition = (x, y, z) => {
+            if (_needleGroup) {
+                _needleGroup.position.set(x, y, z);
+            }
+            if (_cameraLockedToNeedle) {
+                controls.target.set(x, y, z);
+            }
+        };
+
+        // 开/关相机锁定到针尖
+        // 开启后，每次 updateNeedlePosition 都会自动更新轨道中心
+        window.lockCameraToNeedle = (lock) => {
+            _cameraLockedToNeedle = !!lock;
+            // 如果开启锁定，立即把轨道中心跳到当前针尖位置
+            if (_cameraLockedToNeedle && _needleGroup) {
+                controls.target.copy(_needleGroup.position);
+            }
+            console.log('相机锁定针尖: ' + (_cameraLockedToNeedle ? '开启' : '关闭'));
+        };
+
+        // 显示/隐藏定位针
+        window.setNeedleVisible = (visible) => {
+            if (_needleGroup) {
+                _needleGroup.visible = !!visible;
+            }
+        };
+
+        // 获取定位针当前位置
+        window.getNeedlePosition = () => {
+            if (!_needleGroup) {
+                return JSON.stringify({ x: 0, y: 0, z: 0 });
+            }
+            return JSON.stringify({
+                x: _needleGroup.position.x,
+                y: _needleGroup.position.y,
+                z: _needleGroup.position.z
+            });
+        };
+
+        // 以脑立体定位坐标设置针尖位姿
+        // ap: 前后 (Anterior-Posterior)，单位 mm，Bregma 为 0，前方为正
+        // ml: 左右 (Medial-Lateral)，单位 mm，中线为 0，右侧为正
+        // dv: 背腹 (Dorsal-Ventral)，单位 mm，颅骨表面为 0，深入脑内为正
+        // rotation: 绕垂直轴旋转角，单位 度
+        // pitch: 偏离垂直方向倾角，单位 度
+        window.setNeedlePose = (ap, ml, dv, rotation, pitch) => {
+            if (!_needleGroup || _markerSpheres.length === 0) {
+                return JSON.stringify({ ok: false, error: '模型或标记点未就绪' });
+            }
+
+            // Bregma 标记球 (索引 0) 的当前位置作为坐标原点
+            var bregma = _markerSpheres[0].position;
+            // 使用加载时计算的 mm→世界米 换算系数（非固定 /1000）
+            var apM = ap * _mmToWorldScale;
+            var mlM = ml * _mmToWorldScale;
+            var dvM = dv * _mmToWorldScale;
+
+            // 坐标映射：模型空间中，前= -Z，右= +X，上= +Y（所以深入 = -Y）
+            var worldX = bregma.x + mlM;
+            var worldY = bregma.y - dvM;
+            var worldZ = bregma.z - apM;
+
+            _needleGroup.position.set(worldX, worldY, worldZ);
+
+            // 设置角度：先绕 Y 轴旋转 (rotation)，再绕局部 X 轴倾斜 (pitch)
+            _needleGroup.rotation.order = 'YXZ';
+            _needleGroup.rotation.set(
+                THREE.MathUtils.degToRad(pitch),     // X — 倾角
+                THREE.MathUtils.degToRad(rotation),  // Y — 水平旋转
+                0                                    // Z
+            );
+
+            // 如果相机锁定针尖，同步更新轨道中心
+            if (_cameraLockedToNeedle) {
+                controls.target.set(worldX, worldY, worldZ);
+            }
+
+            // 同步更新 DOM 控制条输入框（C# 调用时也能看到数值变化）
+            _syncPoseToDOM(ap, ml, dv, rotation, pitch);
+
+            return JSON.stringify({ ok: true, ap: ap, ml: ml, dv: dv, rotation: rotation, pitch: pitch });
+        };
+
+        // 获取当前针尖位姿（以 Bregma 为原点的脑立体定位坐标）
+        window.getNeedlePose = () => {
+            if (!_needleGroup || _markerSpheres.length === 0) {
+                return JSON.stringify({ ap: 0, ml: 0, dv: 0, rotation: 0, pitch: 0 });
+            }
+
+            var bregma = _markerSpheres[0].position;
+            var pos = _needleGroup.position;
+
+            // 世界坐标反算为立体定位坐标（用真实 mm→世界米 系数）
+            var ap = (bregma.z - pos.z) / _mmToWorldScale;
+            var ml = (pos.x - bregma.x) / _mmToWorldScale;
+            var dv = (bregma.y - pos.y) / _mmToWorldScale;
+
+            var rotation = THREE.MathUtils.radToDeg(_needleGroup.rotation.y);
+            var pitch = THREE.MathUtils.radToDeg(_needleGroup.rotation.x);
+
+            return JSON.stringify({
+                ap: parseFloat(ap.toFixed(3)),
+                ml: parseFloat(ml.toFixed(3)),
+                dv: parseFloat(dv.toFixed(3)),
+                rotation: parseFloat(rotation.toFixed(3)),
+                pitch: parseFloat(pitch.toFixed(3))
+            });
+        };
+
+        // ---------- 颅骨切除 ----------
+
+        // 在针尖位置切除直径 1.5mm 的圆形缺口
+        window.craniotomyCut = () => {
+            if (!_modelLoaded) {
+                return JSON.stringify({ ok: false, error: '模型尚未加载' });
+            }
+            if (!_needleGroup) {
+                return JSON.stringify({ ok: false, error: '定位针未就绪' });
+            }
+
+            // 找到颅骨 mesh
+            var skullMesh = _findSkullMesh();
+            if (!skullMesh) {
+                return JSON.stringify({ ok: false, error: '未找到颅骨网格' });
+            }
+
+            var geom = skullMesh.geometry;
+            if (!geom.index) {
+                return JSON.stringify({ ok: false, error: '网格缺少索引缓冲区' });
+            }
+
+            // 针尖世界坐标 → 颅骨本地坐标
+            var tipLocal = new THREE.Vector3();
+            tipLocal.copy(_needleGroup.position);
+            skullMesh.worldToLocal(tipLocal);
+
+            // 切除圆柱参数：半径 0.75mm，沿颅骨本地 Y 轴
+            var cutRadius = 0.75 * _mmToWorldScale / _skullModel.scale.x;
+
+            console.log('颅骨切除: 针尖本地=(' + tipLocal.x.toFixed(4) + ', '
+                + tipLocal.y.toFixed(4) + ', ' + tipLocal.z.toFixed(4)
+                + ') 切除半径=' + cutRadius.toFixed(5));
+
+            // 读取旧缓冲区
+            var oldIndex = geom.index.array;
+            var oldPos = geom.attributes.position.array;
+            var oldNorm = geom.attributes.normal ? geom.attributes.normal.array : null;
+            var triCount = oldIndex.length / 3;
+
+            // 标记要保留的三角形
+            var keepTri = new Uint8Array(triCount);
+            var keptCount = 0;
+            var removedCount = 0;
+
+            for (var t = 0; t < triCount; t++) {
+                var i0 = oldIndex[t * 3];
+                var i1 = oldIndex[t * 3 + 1];
+                var i2 = oldIndex[t * 3 + 2];
+
+                // 检查三个顶点是否全在圆柱内
+                var in0 = _ptInCylinder(oldPos, i0, tipLocal, cutRadius);
+                var in1 = _ptInCylinder(oldPos, i1, tipLocal, cutRadius);
+                var in2 = _ptInCylinder(oldPos, i2, tipLocal, cutRadius);
+
+                if (in0 && in1 && in2) {
+                    removedCount++;
+                } else {
+                    keepTri[t] = 1;
+                    keptCount++;
+                }
+            }
+
+            if (removedCount === 0) {
+                return JSON.stringify({ ok: false, error: '针尖位置无三角形可切除' });
+            }
+
+            console.log('  三角形: 保留=' + keptCount + ' 删除=' + removedCount);
+
+            // 构建新索引（保留的三角形）
+            var newIdx = new (oldIndex instanceof Uint32Array ? Uint32Array : Uint16Array)(keptCount * 3);
+            var ni = 0;
+            // 记录旧顶点→新顶点索引映射
+            var vertexMap = new Int32Array(oldPos.length / 3);
+            vertexMap.fill(-1);
+
+            for (var tt = 0; tt < triCount; tt++) {
+                if (keepTri[tt]) {
+                    for (var vv = 0; vv < 3; vv++) {
+                        var oldVi = oldIndex[tt * 3 + vv];
+                        if (vertexMap[oldVi] === -1) {
+                            vertexMap[oldVi] = -2; // 占位，后面重新编号
+                        }
+                        newIdx[ni++] = oldVi;
+                    }
+                }
+            }
+
+            // 构建顶点重映射表
+            var newVertexCount = 0;
+            for (var mm = 0; mm < vertexMap.length; mm++) {
+                if (vertexMap[mm] === -2) {
+                    vertexMap[mm] = newVertexCount++;
+                }
+            }
+
+            // 更新索引
+            for (var nn = 0; nn < newIdx.length; nn++) {
+                newIdx[nn] = vertexMap[newIdx[nn]];
+            }
+
+            // 重建 position 数组
+            var newPos = new Float32Array(newVertexCount * 3);
+            for (var pp = 0; pp < vertexMap.length; pp++) {
+                var nv = vertexMap[pp];
+                if (nv >= 0) {
+                    newPos[nv * 3]     = oldPos[pp * 3];
+                    newPos[nv * 3 + 1] = oldPos[pp * 3 + 1];
+                    newPos[nv * 3 + 2] = oldPos[pp * 3 + 2];
+                }
+            }
+
+            // 重建 normal 数组
+            var newNorm = oldNorm ? new Float32Array(newVertexCount * 3) : null;
+            if (newNorm) {
+                for (var qq = 0; qq < vertexMap.length; qq++) {
+                    var nv2 = vertexMap[qq];
+                    if (nv2 >= 0) {
+                        newNorm[nv2 * 3]     = oldNorm[qq * 3];
+                        newNorm[nv2 * 3 + 1] = oldNorm[qq * 3 + 1];
+                        newNorm[nv2 * 3 + 2] = oldNorm[qq * 3 + 2];
+                    }
+                }
+            }
+
+            // 应用到 geometry
+            geom.setIndex(new THREE.BufferAttribute(newIdx, 1));
+            geom.setAttribute('position', new THREE.BufferAttribute(newPos, 3));
+            if (newNorm) {
+                geom.setAttribute('normal', new THREE.BufferAttribute(newNorm, 3));
+            }
+            geom.computeVertexNormals();
+
+            console.log('  颅骨切除完成: ' + removedCount + ' 个三角形, 剩余顶点=' + newVertexCount);
+
+            return JSON.stringify({
+                ok: true,
+                removedTriangles: removedCount,
+                keptTriangles: keptCount,
+                remainingVertices: newVertexCount
+            });
+        };
+
+        // ===================== 8B. 控制条交互 =====================
+        // （HTML 内部自闭环，不依赖 C#。调用链：按钮 → _stepParam → _applyPoseFromDOM → window.setNeedlePose）
+
+        // 从 DOM 输入框读取 5 个位姿值（使用缓存引用）
+        function _readPoseFromDOM() {
+            var ap = parseFloat(_elAp.value);
+            var ml = parseFloat(_elMl.value);
+            var dv = parseFloat(_elDv.value);
+            var rotation = parseFloat(_elRot.value);
+            var pitch = parseFloat(_elPit.value);
+
+            return {
+                ap: isNaN(ap) ? 0 : ap,
+                ml: isNaN(ml) ? 0 : ml,
+                dv: isNaN(dv) ? 0 : dv,
+                rotation: isNaN(rotation) ? 0 : rotation,
+                pitch: isNaN(pitch) ? 0 : pitch
+            };
+        }
+
+        // 将位姿值写回 DOM 输入框（使用缓存引用）
+        function _syncPoseToDOM(ap, ml, dv, rotation, pitch) {
+            if (_elAp)  _elAp.value  = ap.toFixed(3);
+            if (_elMl)  _elMl.value  = ml.toFixed(3);
+            if (_elDv)  _elDv.value  = dv.toFixed(3);
+            if (_elRot) _elRot.value = rotation.toFixed(3);
+            if (_elPit) _elPit.value = pitch.toFixed(3);
+        }
+
+        // 从 DOM 读取所有值，应用到 3D 定位针
+        function _applyPoseFromDOM() {
+            var pose = _readPoseFromDOM();
+            window.setNeedlePose(pose.ap, pose.ml, pose.dv, pose.rotation, pose.pitch);
+        }
+
+        // 【步进按钮】点击时更新输入框并立即应用
+        function _onStepBtnClick(e) {
+            e.preventDefault();
+            var param = this.getAttribute('data-param');
+            var delta = parseFloat(this.getAttribute('data-delta'));
+            if (isNaN(delta)) return;
+
+            _stepParam(param, delta);
+        }
+
+        // 【步进按钮】按住不放持续步进
+        let _stepTimer = null;
+        function _onStepBtnDown(e) {
+            e.preventDefault();
+            var param = this.getAttribute('data-param');
+            var delta = parseFloat(this.getAttribute('data-delta'));
+            if (isNaN(delta)) return;
+
+            _stepParam(param, delta);
+
+            // 150ms 首次延迟，之后每 80ms 重复
+            if (_stepTimer) clearInterval(_stepTimer);
+            _stepTimer = setInterval(function () {
+                _stepParam(param, delta);
+            }, 80);
+        }
+
+        function _onStepBtnUp(e) {
+            if (_stepTimer) {
+                clearInterval(_stepTimer);
+                _stepTimer = null;
+            }
+        }
+
+        // 对单个参数累加 delta 并应用（使用缓存引用）
+        function _stepParam(param, delta) {
+            var el = null;
+            if (param === 'ap') el = _elAp;
+            else if (param === 'ml') el = _elMl;
+            else if (param === 'dv') el = _elDv;
+            else if (param === 'rot') el = _elRot;
+            else if (param === 'pitch') el = _elPit;
+            if (!el) return;
+
+            var current = parseFloat(el.value);
+            if (isNaN(current)) current = 0;
+            var newVal = current + delta;
+            el.value = newVal.toFixed(3);
+            _applyPoseFromDOM();
+        }
+
+        // 输入框按 Enter 键应用
+        function _onInputKeyDown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                _applyPoseFromDOM();
+            }
+        }
+
+        // 模型加载完成后初始化控制面板事件
+        function _initPoseBar() {
+            // 缓存 DOM 元素
+            _elAp  = document.getElementById('pose-ap');
+            _elMl  = document.getElementById('pose-ml');
+            _elDv  = document.getElementById('pose-dv');
+            _elRot = document.getElementById('pose-rot');
+            _elPit = document.getElementById('pose-pitch');
+
+            // 折叠/展开面板
+            var toggleBtn = document.getElementById('ctrl-toggle');
+            var body = document.getElementById('ctrl-body');
+            var open = false;
+            if (toggleBtn && body) {
+                toggleBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    open = !open;
+                    if (open) {
+                        body.classList.add('open');
+                        toggleBtn.textContent = '- 坐标与控制';
+                    } else {
+                        body.classList.remove('open');
+                        toggleBtn.textContent = '+ 坐标与控制';
+                    }
+                });
+            }
+
+            // 步进按钮事件
+            var stepBtns = document.querySelectorAll('.pose-step-btn');
+            for (var i = 0; i < stepBtns.length; i++) {
+                var btn = stepBtns[i];
+                btn.addEventListener('click', _onStepBtnClick);
+                btn.addEventListener('mousedown', _onStepBtnDown);
+                btn.addEventListener('mouseup', _onStepBtnUp);
+                btn.addEventListener('mouseleave', _onStepBtnUp);
+                btn.addEventListener('touchstart', function (e) { e.preventDefault(); _onStepBtnDown.call(this, e); });
+                btn.addEventListener('touchend', _onStepBtnUp);
+            }
+
+            // 输入框 Enter 键
+            var inputs = document.querySelectorAll('.pose-input');
+            for (var j = 0; j < inputs.length; j++) {
+                inputs[j].addEventListener('keydown', _onInputKeyDown);
+            }
+
+            // 应用按钮
+            var applyBtn = document.getElementById('pose-apply');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    _applyPoseFromDOM();
+                });
+            }
+
+            // 坐标轴/栅格切换按钮
+            var axesToggleBtn = document.getElementById('pose-toggle-axes');
+            if (axesToggleBtn) {
+                axesToggleBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    if (_axisGroup) {
+                        _axisGroup.visible = !_axisGroup.visible;
+                        // 同步控制 5 个标记红球
+                        for (var k = 0; k < _markerSpheres.length; k++) {
+                            _markerSpheres[k].visible = _axisGroup.visible;
+                        }
+                        axesToggleBtn.textContent = (_axisGroup.visible ? '+ ' : '- ') + '坐标轴/栅格';
+                        axesToggleBtn.style.background = _axisGroup.visible ? '#3A3A50' : '#5A3030';
+                    }
+                });
+            }
+
+            // 颅骨切除按钮
+            var craniotomyBtn = document.getElementById('btn-craniotomy');
+            if (craniotomyBtn) {
+                craniotomyBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var result = window.craniotomyCut();
+                    var res = JSON.parse(result);
+                    if (res.ok) {
+                        craniotomyBtn.textContent = '已切除 ' + res.removedTriangles + '△';
+                        craniotomyBtn.style.background = '#5A8A3A';
+                    } else {
+                        console.warn('颅骨切除失败: ' + res.error);
+                    }
+                });
+            }
+
+            // 刷新按钮
+            var refreshBtn = document.getElementById('btn-refresh');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    location.reload();
+                });
+            }
+
+            console.log('控制面板已初始化');
+        }
+
+        // _initPoseBar 在 GLB 加载回调末尾调用
+
+        // ===================== 8C. 内部辅助函数 =====================
+        // _findSkullMesh / _ptInCylinder → craniotomyCut 调用
+        // _updateAllMarkerPositions      → 缩放 + 坐标轴同步
+        // _createStereotaxicAxes         → 脑立体坐标系 + 栅格
+        // _createNeedleModel             → 定位针 3D 模型
+
+        // 从 _skullModel 中找到实际的 Mesh 子节点
+        function _findSkullMesh() {
+            var found = null;
+            _skullModel.traverse(function (child) {
+                if (child.isMesh && !found) {
+                    found = child;
+                }
+            });
+            return found;
+        }
+
+        // 判断顶点 (px,py,pz) 是否在以 (cx,cy,cz) 为中心、半径为 r 的圆柱内（沿 Y 轴）
+        function _ptInCylinder(posArr, i, center, radius) {
+            var dx = posArr[i * 3] - center.x;
+            var dz = posArr[i * 3 + 2] - center.z;
+            return (dx * dx + dz * dz) <= (radius * radius);
+        }
+
+        // 根据 GLB 节点当前世界坐标更新所有标记球位置 + 坐标轴原点 + 换算系数
+        function _updateAllMarkerPositions() {
+            for (var i = 0; i < _markerNodes.length; i++) {
+                var worldPos = new THREE.Vector3();
+                _markerNodes[i].getWorldPosition(worldPos);
+                _markerSpheres[i].position.copy(worldPos);
+            }
+            // 同步更新 mm→世界米 换算系数
+            if (_markerSpheres.length >= 2) {
+                var worldDist = _markerSpheres[0].position.distanceTo(_markerSpheres[1].position);
+                _mmToWorldScale = worldDist / 4.21;
+            }
+            // 同步更新脑立体坐标系：原点跟随 Bregma，尺寸跟随换算系数变化
+            if (_axisGroup && _markerSpheres.length > 0) {
+                _axisGroup.position.copy(_markerSpheres[0].position);
+                _axisGroup.scale.setScalar(_mmToWorldScale / _axisBaseScale);
+            }
+        }
+
+        // 创建脑立体定位坐标系 + 栅格
+        // 所有尺寸用脑空间 mm 定义，通过 _mmToWorldScale 转为世界米
+        function _createStereotaxicAxes() {
+            var group = new THREE.Group();
+            group.name = 'StereotaxicAxes';
+
+            _axisBaseScale = _mmToWorldScale;
+            var W = function (mm) { return mm * _mmToWorldScale; };
+
+            var headH = W(0.6);  // 箭头高
+            var headR = W(0.3);  // 箭头半径
+
+            // AP 轴 — 前方(-Z) — 绿色，长 5mm
+            group.add(new THREE.ArrowHelper(
+                new THREE.Vector3(0, 0, -1), new THREE.Vector3(), W(5), 0x00CC66, headH, headR));
+            // ML 轴 — 右侧(+X) — 红色，长 5mm
+            group.add(new THREE.ArrowHelper(
+                new THREE.Vector3(1, 0, 0), new THREE.Vector3(), W(5), 0xFF3333, headH, headR));
+            // DV 轴 — 腹侧(-Y) — 蓝色，长 4mm
+            group.add(new THREE.ArrowHelper(
+                new THREE.Vector3(0, -1, 0), new THREE.Vector3(), W(4), 0x3388FF, headH, headR));
+
+            // ---- AP-ML 平面栅格 (XZ 平面, ±10mm, 步距 1mm) ----
+            var gridSpan = W(10);
+            var gridStep = W(1);
+            var steps = Math.round(gridSpan / gridStep);
+            var matML = new THREE.LineBasicMaterial({ color: 0xFF6666, transparent: true, opacity: 0.35, depthTest: true });
+            var matAP = new THREE.LineBasicMaterial({ color: 0x66CC88, transparent: true, opacity: 0.35, depthTest: true });
+
+            for (var s = -steps; s <= steps; s++) {
+                var offset = s * gridStep;
+                // ML 方向线（沿 X，不同 Z）— 红
+                group.add(new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(-gridSpan, 0, offset), new THREE.Vector3(gridSpan, 0, offset)]), matML));
+                // AP 方向线（沿 Z，不同 X）— 绿
+                group.add(new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(offset, 0, -gridSpan), new THREE.Vector3(offset, 0, gridSpan)]), matAP));
+            }
+
+            if (_markerSpheres.length > 0) {
+                group.position.copy(_markerSpheres[0].position);
+            }
+
+            console.log('坐标系+栅格: 轴5/5/4mm, 栅格±10mm/1mm步, W=' + _mmToWorldScale.toFixed(6));
+            return group;
+        }
+
+        // 创建定位针 3D 模型，返回 Group（尖端在 Group 原点）
+        // 结构：金色圆锥针尖 + 同色圆柱针杆，两段同色无缝拼接
+        //
+        // 【调参指南 — 所有尺寸单位均为 mm】
+        //   针尖粗细 → ConeGeometry / CylinderGeometry 半径
+        //   针尖长短 → ConeGeometry 高度
+        //   针杆长短 → CylinderGeometry 高度
+        //   颜色     → mat.color
+        //   表面光滑度 → roughness（0=镜面, 1=磨砂）
+        //   金属质感  → metalness（0=塑料, 1=金属）
+        function _createNeedleModel() {
+            var group = new THREE.Group();
+            group.name = 'NeedleElectrode';
+
+            // 共享材质：金色，圆锥和圆柱颜色一致
+            var mat = new THREE.MeshStandardMaterial({
+                color: 0xffaa00,             // 金色
+                roughness: 0.2,              // 较光滑，反光明显
+                metalness: 0.6,              // 半金属质感
+                emissive: 0x331100,          // 暗红色自发光
+                emissiveIntensity: 0.3
+            });
+
+            // ===== 针尖：圆锥 =====
+            // ConeGeometry(底部半径_mm, 高度_mm, 圆周分段数)
+            //   参数1: 6     = 底部半径 6mm
+            //   参数2: 300   = 高度 300mm (锥底在 Y=300mm)
+            //   参数3: 8     = 8 边
+            var coneH = 0.3;                    // 圆锥高度 (m)
+            var tipGeom = new THREE.ConeGeometry(0.006, coneH, 8);
+            tipGeom.rotateX(Math.PI);           // 翻转 180°，尖端朝下
+            tipGeom.translate(0, coneH / 2, 0); // Y 轴上移 halfHeight，尖端对齐 Group 原点 Y=0
+            var tipMesh = new THREE.Mesh(tipGeom, mat);
+            tipMesh.castShadow = true;
+            group.add(tipMesh);
+
+            // ===== 针杆：圆柱 =====
+            // CylinderGeometry(上半径_mm, 下半径_mm, 高度_mm, 圆周分段数)
+            //   参数1: 6     = 顶部半径 6mm（与锥底一致）
+            //   参数2: 6     = 底部半径 6mm（与锥底一致）
+            //   参数3: 200   = 高度 200mm
+            //   参数4: 8     = 8 边
+            // 锥底在 Y=coneH，圆柱从 Y=coneH 延伸到 Y=coneH+shaftH
+            var shaftH = 0.2;                                    // 圆柱高度 (m)
+            var shaftGeom = new THREE.CylinderGeometry(0.006, 0.006, shaftH, 8);
+            shaftGeom.translate(0, coneH + shaftH / 2, 0);       // 中心在 coneH + shaftH/2
+            var shaftMesh = new THREE.Mesh(shaftGeom, mat);
+            shaftMesh.castShadow = true;
+            group.add(shaftMesh);
+
+            // ===== 红色虚线轴线：从针尖向下延伸 =====
+            var dashGeom = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),      // 针尖 (Group 原点)
+                new THREE.Vector3(0, -0.2, 0)    // 向下 200mm
+            ]);
+            var dashMat = new THREE.LineDashedMaterial({
+                color: 0xFF3333,                  // 醒目的红色
+                dashSize: 0.012,                  // 实线段长
+                gapSize: 0.006                    // 虚空间隔
+            });
+            var dashLine = new THREE.Line(dashGeom, dashMat);
+            dashLine.computeLineDistances();       // 虚线必须调用
+            group.add(dashLine);
+
+            return group;
+        }
+
+        // ===================== 9. 渲染循环 =====================
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth, h = window.innerHeight;
+            if (w === 0 || h === 0) return;
+            camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+        });
+        window.dispatchEvent(new Event('resize'));
+    </script>
+</body>
+
+</html>

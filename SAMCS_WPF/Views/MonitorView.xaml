@@ -260,15 +260,27 @@
                                     Foreground="#1D1D1F"
                                     Text="监控参数" />
 
-                                <TextBlock Grid.Row="1" FontWeight="SemiBold" Text="轴号" />
-                                <TextBlock Grid.Row="2" FontWeight="SemiBold" Text="电机型号" />
+                                <TextBlock
+                                    Grid.Row="1"
+                                    FontWeight="SemiBold"
+                                    Text="轴号" />
+                                <TextBlock
+                                    Grid.Row="2"
+                                    FontWeight="SemiBold"
+                                    Text="电机型号" />
 
                                 <!--  动态监视区  -->
                                 <Border Grid.Row="3" Background="#EBF5FF">
-                                    <TextBlock FontWeight="Bold" Foreground="#007AFF" Text="绝对位置 (mm/°)" />
+                                    <TextBlock
+                                        FontWeight="Bold"
+                                        Foreground="#007AFF"
+                                        Text="绝对位置 (mm/°)" />
                                 </Border>
                                 <Border Grid.Row="4" Background="#F2F2F7">
-                                    <TextBlock FontWeight="Bold" Foreground="#1D1D1F" Text="速度 (mm/°·s)" />
+                                    <TextBlock
+                                        FontWeight="Bold"
+                                        Foreground="#1D1D1F"
+                                        Text="速度 (mm/°·s)" />
                                 </Border>
 
                                 <!--  静态配置区  -->

@@ -74,8 +74,25 @@
     <Content Include="3D\Runtime\js\URDFClasses.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- SkullViewer：颅骨 3D 查看器 HTML -->
+    <Content Include="3D\Runtime\SkullViewer.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- GLTFLoader：GLB 模型加载器 -->
+    <Content Include="3D\Runtime\js\GLTFLoader.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- BufferGeometryUtils：GLTFLoader 依赖 -->
+    <Content Include="3D\Runtime\utils\BufferGeometryUtils.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <!-- Model：URDF 结构定义 -->
     <Content Include="3D\Model\SAMCS.urdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Model：小鼠颅骨 GLB（源在 assets，Link 到 3D\Model 供虚拟主机访问） -->
+    <Content Include="assets\MouseSkull.glb">
+      <Link>3D\Model\MouseSkull.glb</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <!-- Model：STL 三维网格（9 个） -->
