@@ -17,7 +17,7 @@ namespace SAMCS_WPF.ViewModels
 
         // ===================== 私有状态字段 =====================
 
-        private string _selectedPage = "Monitor";
+        private string _selectedPage = "Stereotaxic";
 
         // ===================== 导航属性 =====================
 

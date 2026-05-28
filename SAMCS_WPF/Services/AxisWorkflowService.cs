@@ -102,8 +102,8 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[0].ExpectedMotorModel = "IM42ET_485";
             _axisDefinitions[0].SoftLimitMin = -180.000f;
             _axisDefinitions[0].SoftLimitMax = 180.000f;
-            _axisDefinitions[0].SoftVelocityLimit = 5;
-            _axisDefinitions[0].HomePosition = 0f;
+            _axisDefinitions[0].SoftVelocityLimit = 5.000f;
+            _axisDefinitions[0].HomePosition = 0.000f;
 
             // 轴 2: Y 前后平移轴
             _axisDefinitions[1] = new AxisDefinition();
@@ -113,8 +113,8 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[1].ExpectedMotorModel = "IM42ET_485";
             _axisDefinitions[1].SoftLimitMin = 0.000f;
             _axisDefinitions[1].SoftLimitMax = 200.000f;
-            _axisDefinitions[1].SoftVelocityLimit = 5;
-            _axisDefinitions[1].HomePosition = 100f;
+            _axisDefinitions[1].SoftVelocityLimit = 5.000f;
+            _axisDefinitions[1].HomePosition = 100.000f;
 
             // 轴 3: X 左右平移轴
             _axisDefinitions[2] = new AxisDefinition();
@@ -124,8 +124,8 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[2].ExpectedMotorModel = "IM42ET_485";
             _axisDefinitions[2].SoftLimitMin = 0.000f;
             _axisDefinitions[2].SoftLimitMax = 200.000f;
-            _axisDefinitions[2].SoftVelocityLimit = 5;
-            _axisDefinitions[2].HomePosition = 100f;
+            _axisDefinitions[2].SoftVelocityLimit = 5.000f;
+            _axisDefinitions[2].HomePosition = 100.000f;
 
             // 轴 4: Z 上下平移轴
             _axisDefinitions[3] = new AxisDefinition();
@@ -135,8 +135,8 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[3].ExpectedMotorModel = "IM42ET_485";
             _axisDefinitions[3].SoftLimitMin = 0.000f;
             _axisDefinitions[3].SoftLimitMax = 75.000f;
-            _axisDefinitions[3].SoftVelocityLimit = 5;
-            _axisDefinitions[3].HomePosition = 32.5f;
+            _axisDefinitions[3].SoftVelocityLimit = 5.000f;
+            _axisDefinitions[3].HomePosition = 32.500f;
 
             // 轴 5: P 俯仰轴
             _axisDefinitions[4] = new AxisDefinition();
@@ -146,8 +146,8 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[4].ExpectedMotorModel = "IM35ET_485";
             _axisDefinitions[4].SoftLimitMin = 0.000f;
             _axisDefinitions[4].SoftLimitMax = 90.000f;
-            _axisDefinitions[4].SoftVelocityLimit = 5;
-            _axisDefinitions[4].HomePosition = 45f;
+            _axisDefinitions[4].SoftVelocityLimit = 5.000f;
+            _axisDefinitions[4].HomePosition = 45.000f;
 
             // 轴 6: I 植入轴
             _axisDefinitions[5] = new AxisDefinition();
@@ -155,10 +155,10 @@ namespace SAMCS_WPF.Services
             _axisDefinitions[5].AxisName = "I(植入)";
             _axisDefinitions[5].AxisId = "06";
             _axisDefinitions[5].ExpectedMotorModel = "IM28ET_485";
-            _axisDefinitions[5].SoftLimitMin = 0;
-            _axisDefinitions[5].SoftLimitMax = 50;
-            _axisDefinitions[5].SoftVelocityLimit = 5;
-            _axisDefinitions[5].HomePosition = 10f;
+            _axisDefinitions[5].SoftLimitMin = 0.000f;
+            _axisDefinitions[5].SoftLimitMax = 50.000f;
+            _axisDefinitions[5].SoftVelocityLimit = 5.000f;
+            _axisDefinitions[5].HomePosition = 10.000f;
         }
 
         // ===================== 属性 =====================

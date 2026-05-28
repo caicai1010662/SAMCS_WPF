@@ -6,115 +6,144 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <Platforms>AnyCPU;x64</Platforms>
-    <!-- x64 强制——ftcoreimc.dll 仅提供 64 位版本，AnyCPU 编译也会锁定 x64 -->
-    <PlatformTarget>x64</PlatformTarget>
-    <!-- 应用程序图标：显示在 exe 文件、任务栏和主窗口标题栏 -->
-    <ApplicationIcon>assets\SAMCS.ico</ApplicationIcon>
+	<OutputType>WinExe</OutputType>
+	<TargetFramework>net8.0-windows</TargetFramework>
+	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<UseWPF>true</UseWPF>
+	<Platforms>AnyCPU;x64</Platforms>
+	<!-- x64 强制——ftcoreimc.dll 仅提供 64 位版本，AnyCPU 编译也会锁定 x64 -->
+	<PlatformTarget>x64</PlatformTarget>
+	<!-- 关闭 NuGet 漏洞审计，避免 api.nuget.org 网络超时拖慢还原（17s+ → <1s） -->
+	<NuGetAudit>false</NuGetAudit>
+	<!-- 应用程序图标：显示在 exe 文件、任务栏和主窗口标题栏 -->
+	<ApplicationIcon>assets\SAMCS.ico</ApplicationIcon>
+	<!--
+	  仿真测试模式：取消下行注释即可启用。
+	  所有 SDK 硬件调用替换为日志输出，UI 状态正常模拟。
+	  测试完毕后恢复注释，重新编译即回到真机模式。
+	-->
+	  <!--<DefineConstants>SIMULATION</DefineConstants>-->
   </PropertyGroup>
 
   <!--
-    排除旧 SDK 源码目录（SDK\** 为占位，实际 SDK 源码在 ..\MyRobotSDK\ 下通过项目引用编译）
+	排除旧 SDK 源码目录（SDK\** 为占位，实际 SDK 源码在 ..\MyRobotSDK\ 下通过项目引用编译）
   -->
   <ItemGroup>
-    <Compile Remove="SDK\**" />
-    <EmbeddedResource Remove="SDK\**" />
-    <None Remove="SDK\**" />
-    <Page Remove="SDK\**" />
+	<Compile Remove="SDK\**" />
+	<EmbeddedResource Remove="SDK\**" />
+	<None Remove="SDK\**" />
+	<Page Remove="SDK\**" />
   </ItemGroup>
 
   <!--
-    ftcoreimc.dll —— 原厂非托管驱动，由 MyRobotSDK 项目引用级联复制，无需本地副本。
+	ftcoreimc.dll —— 原厂非托管驱动，由 MyRobotSDK 项目引用级联复制，无需本地副本。
   -->
 
   <!-- NuGet 依赖 -->
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
-    <PackageReference Include="System.IO.Ports" Version="10.0.7" />
+	<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
+	<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
+	<PackageReference Include="System.IO.Ports" Version="10.0.7" />
   </ItemGroup>
 
   <!-- 预留目录占位——确保 VS 和 VS Code 中目录可见 -->
   <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Services\" />
-    <Folder Include="Views\" />
-    <Folder Include="Renderers\" />
-    <Folder Include="Converters\" />
+	<Folder Include="Models\" />
+	<Folder Include="Services\" />
+	<Folder Include="Views\" />
+	<Folder Include="Renderers\" />
+	<Folder Include="Converters\" />
   </ItemGroup>
 
   <!--
-    3D 资产文件（HTML + JS + URDF + STL）跟随输出目录。
-    运行时 WebView2 虚拟主机映射到 bin 下的 3D/ 子目录，
-    不再依赖源码目录查找。
+	3D 资产文件（HTML + JS + URDF + STL）跟随输出目录。
+	运行时 WebView2 虚拟主机映射到 bin 下的 3D/ 子目录，
+	不再依赖源码目录查找。
   -->
   <ItemGroup>
-    <!-- Runtime：Three.js 网页 + JS 库 -->
-    <Content Include="3D\Runtime\index.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Runtime\js\three.module.min.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Runtime\js\OrbitControls.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Runtime\js\STLLoader.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Runtime\js\URDFLoader.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Runtime\js\URDFClasses.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <!-- Model：URDF 结构定义 -->
-    <Content Include="3D\Model\SAMCS.urdf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <!-- Model：STL 三维网格（9 个） -->
-    <Content Include="3D\Model\meshes\baselink_framework.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\link1_motor1_R.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\link2_motor2_Y.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\link3_motor3_X.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\link4_motor4_Z.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\link5_motor5_P.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\link6_motor6_I.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\link7_clamp.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="3D\Model\meshes\Probe.STL">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+	<!-- Runtime：Three.js 网页 + JS 库 -->
+	<Content Include="3D\Runtime\index.html">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Runtime\js\three.module.min.js">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Runtime\js\OrbitControls.js">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Runtime\js\STLLoader.js">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Runtime\js\URDFLoader.js">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Runtime\js\URDFClasses.js">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<!-- SkullViewer：颅骨 3D 查看器 HTML -->
+	<Content Include="3D\Runtime\SkullViewer.html">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<!-- GLTFLoader：GLB 模型加载器 -->
+	<Content Include="3D\Runtime\js\GLTFLoader.js">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<!-- BufferGeometryUtils：GLTFLoader 依赖 -->
+	<Content Include="3D\Runtime\utils\BufferGeometryUtils.js">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<!-- Model：URDF 结构定义 -->
+	<Content Include="3D\Model\SAMCS.urdf">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<!-- Model：小鼠颅骨 GLB（源在 assets，Link 到 3D\Model 供虚拟主机访问） -->
+	<Content Include="assets\MouseSkull.glb">
+	  <Link>3D\Model\MouseSkull.glb</Link>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<!-- Model：缩放后颅骨 GLB（Bregma-Lambda = 4.21mm） -->
+	<Content Include="3D\Model\MouseSkull_4.21mm.glb">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<!-- Model：STL 三维网格（9 个） -->
+	<Content Include="3D\Model\meshes\baselink_framework.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\link1_motor1_R.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\link2_motor2_Y.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\link3_motor3_X.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\link4_motor4_Z.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\link5_motor5_P.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\link6_motor6_I.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\link7_clamp.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="3D\Model\meshes\Probe.STL">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MyRobotSDK\MyRobotSDK.csproj" />
+	<ProjectReference Include="..\MyRobotSDK\MyRobotSDK.csproj" />
   </ItemGroup>
 
   <!--
-    MyRobotSDK 项目引用。
-    原为本地 DLL 程序集引用 (lib\MyRobotSDK.dll)，现已改为项目引用，
-    两个项目级联编译，SDK 变更实时生效。
+	MyRobotSDK 项目引用。
+	原为本地 DLL 程序集引用 (lib\MyRobotSDK.dll)，现已改为项目引用，
+	两个项目级联编译，SDK 变更实时生效。
   -->
 
 </Project>
