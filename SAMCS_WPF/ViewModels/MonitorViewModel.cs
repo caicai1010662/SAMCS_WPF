@@ -313,14 +313,14 @@ namespace SAMCS_WPF.ViewModels
             // 2. 从服务获取六轴产品定义，创建 UI 绑定的 AxisUIModel 列表
             InitializeAxesFromDefinitions();
 
-            // 3. 创建 50ms 高频刷新定时器（不立即启动）
+            // 3. 创建 100ms 高频刷新定时器（不立即启动）
             _refreshTimer = new DispatcherTimer();
-            _refreshTimer.Interval = TimeSpan.FromMilliseconds(50);
+            _refreshTimer.Interval = TimeSpan.FromMilliseconds(100);
             _refreshTimer.Tick += OnRefreshTimerTick;
 
-            // 4. 创建 600s 低频配置刷新定时器（不立即启动）
+            // 4. 创建 300s 低频配置刷新定时器（不立即启动）
             _configTimer = new DispatcherTimer();
-            _configTimer.Interval = TimeSpan.FromSeconds(600);
+            _configTimer.Interval = TimeSpan.FromSeconds(300);
             _configTimer.Tick += OnConfigTimerTick;
         }
 

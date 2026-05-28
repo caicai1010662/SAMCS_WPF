@@ -1,9 +1,12 @@
 <!--
-    StereotaxicView — 脑立体定向页面。
-
+    StereotaxicView - 脑立体定向页面。
+    
     布局：
     左侧 40%：WebView2 加载 3D 小鼠颅骨模型（SkullViewer.html + MouseSkull.glb）
-    右侧 60%：脑立体定向功能面板（预留）
+    右侧 60%：功能面板
+    - 上 70%：三个模块（轴运动控制、五点记录、当前方位）
+    - 下 30%：设备日志输出窗口
+    - 底部：全局急停按钮
 -->
 <UserControl
     x:Class="SAMCS_WPF.Views.StereotaxicView"
@@ -12,15 +15,306 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-    d:DesignHeight="750"
-    d:DesignWidth="1100"
+    d:DesignHeight="1080"
+    d:DesignWidth="1920"
     Background="#F5F5F7"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <!--  卡片样式  -->
+        <Style x:Key="MaterialCard" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect
+                        BlurRadius="15"
+                        Direction="270"
+                        Opacity="0.04"
+                        ShadowDepth="2" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  卡片标题  -->
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#1D1D1F" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <!--  普通按钮  -->
+        <Style x:Key="MaterialButton" TargetType="Button">
+            <Setter Property="Background" Value="#E8E8ED" />
+            <Setter Property="Foreground" Value="#1D1D1F" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#D1D1D6" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#C7C7CC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Jog 正转按钮（蓝底白字）  -->
+        <Style x:Key="JogPlusButton" TargetType="Button">
+            <Setter Property="Width" Value="100" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Background" Value="#0088FF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#0066CC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#005BB5" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#004A9E" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Jog 反转按钮（深灰底白字）  -->
+        <Style x:Key="JogMinusButton" TargetType="Button">
+            <Setter Property="Width" Value="100" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Background" Value="#3A3A3C" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#2C2C2E" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4A4A4D" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2C2C2E" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  停止按钮（数值调用，橙底白字）  -->
+        <Style x:Key="StopButton" TargetType="Button">
+            <Setter Property="Width" Value="54" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Background" Value="#FF9500" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#CC7700" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E68600" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#CC7700" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  主按钮  -->
+        <Style
+            x:Key="PrimaryButton"
+            BasedOn="{StaticResource MaterialButton}"
+            TargetType="Button">
+            <Setter Property="Background" Value="#0071E3" />
+            <Setter Property="Foreground" Value="White" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#0060C0" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  急停按钮  -->
+        <Style
+            x:Key="EmergencyStopButton"
+            BasedOn="{StaticResource MaterialButton}"
+            TargetType="Button">
+            <Setter Property="Background" Value="#CC0000" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Height" Value="44" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF1A1A" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  模式切换按钮  -->
+        <Style x:Key="ModeToggleButton" TargetType="RadioButton">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border
+                            x:Name="border"
+                            Padding="8,4,8,4"
+                            Background="#F2F2F7"
+                            BorderBrush="#E5E5EA"
+                            BorderThickness="1"
+                            CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#0071E3" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#0071E3" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#0071E3" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  速度选择按钮  -->
+        <Style x:Key="SpeedButton" TargetType="RadioButton">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border
+                            x:Name="border"
+                            Padding="8,4,8,4"
+                            Background="#F2F2F7"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#0071E3" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#0071E3" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#0071E3" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  轴运动控制：轴行卡片  -->
+        <Style x:Key="AxisRowBorder" TargetType="Border">
+            <Setter Property="Padding" Value="8,5,8,5" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Background" Value="#FAFAFC" />
+            <Setter Property="BorderBrush" Value="#E8E8EC" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <!--  五点记录：步骤行卡片  -->
+        <Style x:Key="FivePointStepBorder" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,0,20" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Background" Value="#FAFAFC" />
+            <Setter Property="BorderBrush" Value="#E8E8EC" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <!--  五点记录：步骤标签文字  -->
+        <Style x:Key="FivePointStepLabel" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#1D1D1F" />
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
     <Grid Margin="15">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*" />
-            <ColumnDefinition Width="6*" />
+            <ColumnDefinition Width="428*" />
+            <ColumnDefinition Width="323*" />
+            <ColumnDefinition Width="319*" />
         </Grid.ColumnDefinitions>
 
         <!--  左侧：3D 颅骨模型渲染区  -->
@@ -28,19 +322,1662 @@
             <wv2:WebView2 x:Name="WebViewSkull" DefaultBackgroundColor="Transparent" />
         </Border>
 
-        <!--  右侧：功能面板（预留）  -->
-        <Border
-            Grid.Column="1"
-            Background="White"
-            CornerRadius="12"
-            BorderThickness="0">
-            <Border.Effect>
-                <DropShadowEffect
-                    BlurRadius="15"
-                    Direction="270"
-                    Opacity="0.04"
-                    ShadowDepth="2" />
-            </Border.Effect>
-        </Border>
+        <!--  右侧：功能面板  -->
+        <Grid Grid.Column="1" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="7*" />
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--  ===================== 上行：三个功能模块 =====================  -->
+            <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3.8*" />
+                    <ColumnDefinition Width="3.8*" />
+                    <ColumnDefinition Width="2.4*" />
+                </Grid.ColumnDefinitions>
+
+                <!--  ===== 上左：轴运动控制 =====  -->
+                <Border
+                    Grid.Column="0"
+                    Margin="0,0,5,0"
+                    Padding="10"
+                    Style="{StaticResource MaterialCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="2*" />
+                        </Grid.RowDefinitions>
+
+                        <!--  标题行：标题 + 模式切换同行  -->
+                        <Grid Grid.Row="0" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="#1D1D1F"
+                                Text="六轴运动控制" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <RadioButton
+                                    x:Name="ModeCoarse"
+                                    Command="{Binding SwitchModeCommand}"
+                                    CommandParameter="Coarse"
+                                    Content="粗调"
+                                    GroupName="ControlMode"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButton}" />
+                                <RadioButton
+                                    x:Name="ModeFine"
+                                    Command="{Binding SwitchModeCommand}"
+                                    CommandParameter="Fine"
+                                    Content="细调"
+                                    GroupName="ControlMode"
+                                    Style="{StaticResource ModeToggleButton}" />
+                                <RadioButton
+                                    x:Name="ModeNumeric"
+                                    Command="{Binding SwitchModeCommand}"
+                                    CommandParameter="Numeric"
+                                    Content="数值调"
+                                    GroupName="ControlMode"
+                                    Style="{StaticResource ModeToggleButton}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  速度选择 + 数值调子模式  -->
+                        <StackPanel Grid.Row="1" Margin="0,0,0,4">
+                            <!--  粗调速度行（粗调/数值调下可见）  -->
+                            <StackPanel
+                                Margin="0,0,0,3"
+                                Orientation="Horizontal"
+                                Visibility="{Binding ShowCoarseSpeeds, Converter={StaticResource BoolToVis}}">
+                                <TextBlock
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    FontWeight="Bold"
+                                    Foreground="#1D1D1F"
+                                    Text="{Binding SpeedLabel}" />
+                                <ListBox
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ItemsSource="{Binding CoarseSpeeds}"
+                                    SelectedItem="{Binding SelectedCoarseSpeed}"
+                                    SelectionMode="Single">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <RadioButton
+                                                            Content="{Binding}"
+                                                            ContentStringFormat="F3"
+                                                            GroupName="SpeedGroup"
+                                                            IsChecked="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}}"
+                                                            Style="{StaticResource SpeedButton}" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
+                            </StackPanel>
+
+                            <!--  细调速度行（细调/数值调模式下可见）  -->
+                            <StackPanel
+                                Margin="0,0,0,3"
+                                Orientation="Horizontal"
+                                Visibility="{Binding ShowFineSpeeds, Converter={StaticResource BoolToVis}}">
+                                <TextBlock
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    FontWeight="Bold"
+                                    Foreground="#1D1D1F"
+                                    Text="{Binding FineSpeedLabel}" />
+                                <ListBox
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ItemsSource="{Binding FineSpeeds}"
+                                    SelectedItem="{Binding SelectedFineSpeed}"
+                                    SelectionMode="Single">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <RadioButton
+                                                            Content="{Binding}"
+                                                            ContentStringFormat="F3"
+                                                            GroupName="SpeedGroup"
+                                                            IsChecked="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}}"
+                                                            Style="{StaticResource SpeedButton}" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
+                            </StackPanel>
+
+                            <!--  数值调子模式（仅数值调下可见）  -->
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsNumericMode, Converter={StaticResource BoolToVis}}">
+                                <TextBlock
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    FontWeight="Bold"
+                                    Foreground="#1D1D1F"
+                                    Text="模式:" />
+                                <RadioButton
+                                    Command="{Binding SwitchNumericModeCommand}"
+                                    CommandParameter="Absolute"
+                                    Content="绝对"
+                                    GroupName="NumericMode"
+                                    IsChecked="True"
+                                    Style="{StaticResource SpeedButton}" />
+                                <RadioButton
+                                    Command="{Binding SwitchNumericModeCommand}"
+                                    CommandParameter="Relative"
+                                    Content="相对"
+                                    GroupName="NumericMode"
+                                    Style="{StaticResource SpeedButton}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!--  六轴列表 —— 按功能分三组  -->
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="3*" />
+                                <RowDefinition Height="1*" />
+                            </Grid.RowDefinitions>
+
+                            <!--  ====== 组 1: 角度轴 R / P ======  -->
+                            <Border
+                                Grid.Row="0"
+                                Margin="0,0,0,9"
+                                Padding="6,4"
+                                Background="#F8F8FA"
+                                BorderBrush="#D1D1D6"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                                <Grid Grid.IsSharedSizeScope="True">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Margin="4,0,0,4"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="#8E8E93"
+                                        Text="角度轴  R / P" />
+
+                                    <!--  Axis 0: R(旋转)  -->
+                                    <Border
+                                        Grid.Row="1"
+                                        Margin="0,0,0,2"
+                                        Style="{StaticResource AxisRowBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Gap1" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Position" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Unit" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Status" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Controls" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!--  轴名  -->
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="#1D1D1F"
+                                                Text="{Binding Axes[0].AxisName}" />
+
+                                            <!--  间距  -->
+                                            <Border Grid.Column="1" Width="6" />
+
+                                            <!--  当前位置（核心信息，大字醒目）  -->
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="20"
+                                                FontWeight="Bold"
+                                                Foreground="#007AFF"
+                                                Text="{Binding Axes[0].CurrentPosition, StringFormat={}{0:F3}}" />
+
+                                            <!--  单位（已移除）  -->
+
+                                            <!--  状态灯  -->
+                                            <Ellipse
+                                                Grid.Column="4"
+                                                Width="12"
+                                                Height="12"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Stroke" Value="#1D1D1F" />
+                                                        <Setter Property="StrokeThickness" Value="1" />
+                                                        <Setter Property="Fill" Value="#34C759" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Axes[0].IsRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#FF3B30" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+
+                                            <!--  Jog 按钮区  -->
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                VerticalAlignment="Center"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsJogMode, Converter={StaticResource BoolToVis}}">
+                                                <Button
+                                                    x:Name="JogRMinus"
+                                                    Content="-"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogMinusButton}"
+                                                    Tag="0-" />
+                                                <Border
+                                                    Width="1"
+                                                    Margin="20,0,20,0"
+                                                    VerticalAlignment="Stretch"
+                                                    Background="#000000" />
+                                                <Button
+                                                    x:Name="JogRPlus"
+                                                    Content="+"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogPlusButton}"
+                                                    Tag="0+" />
+                                            </StackPanel>
+
+                                            <!--  数值调区  -->
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                VerticalAlignment="Center"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsNumericMode, Converter={StaticResource BoolToVis}}">
+                                                <TextBox
+                                                    Width="80"
+                                                    Height="34"
+                                                    VerticalContentAlignment="Center"
+                                                    FontFamily="Consolas"
+                                                    FontSize="14"
+                                                    PreviewTextInput="NumericInput_PreviewTextInput"
+                                                    Tag="0"
+                                                    Text="{Binding Axes[0].InputText, UpdateSourceTrigger=PropertyChanged}"
+                                                    TextChanged="NumericInput_TextChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="BorderBrush" Value="#E5E5EA" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Axes[0].IsInputValid}" Value="False">
+                                                                    <Setter Property="BorderBrush" Value="#FF3B30" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                                <Button
+                                                    Width="54"
+                                                    Height="34"
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding ExecuteNumericMoveCommand}"
+                                                    CommandParameter="0"
+                                                    Content="执行"
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding StopAxisCommand}"
+                                                    CommandParameter="0"
+                                                    Content="停止"
+                                                    Style="{StaticResource StopButton}" />
+                                                <!--  错误提示已移至设备日志  -->
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  Axis 1: P(俯仰)  -->
+                                    <Border
+                                        Grid.Row="2"
+                                        Margin="0,0,0,2"
+                                        Style="{StaticResource AxisRowBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Gap1" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Position" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Unit" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Status" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Controls" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="#1D1D1F"
+                                                Text="{Binding Axes[1].AxisName}" />
+                                            <Border Grid.Column="1" Width="6" />
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="20"
+                                                FontWeight="Bold"
+                                                Foreground="#007AFF"
+                                                Text="{Binding Axes[1].CurrentPosition, StringFormat={}{0:F3}}" />
+                                            <Ellipse
+                                                Grid.Column="4"
+                                                Width="12"
+                                                Height="12"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Stroke" Value="#1D1D1F" />
+                                                        <Setter Property="StrokeThickness" Value="1" />
+                                                        <Setter Property="Fill" Value="#34C759" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Axes[1].IsRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#FF3B30" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsJogMode, Converter={StaticResource BoolToVis}}">
+                                                <Button
+                                                    x:Name="JogPMinus"
+                                                    Content="-"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogMinusButton}"
+                                                    Tag="1-" />
+                                                <Border
+                                                    Width="1"
+                                                    Margin="20,0,20,0"
+                                                    VerticalAlignment="Stretch"
+                                                    Background="#000000" />
+                                                <Button
+                                                    x:Name="JogPPlus"
+                                                    Content="+"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogPlusButton}"
+                                                    Tag="1+" />
+                                            </StackPanel>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsNumericMode, Converter={StaticResource BoolToVis}}">
+                                                <TextBox
+                                                    Width="80"
+                                                    Height="34"
+                                                    VerticalContentAlignment="Center"
+                                                    FontFamily="Consolas"
+                                                    FontSize="14"
+                                                    PreviewTextInput="NumericInput_PreviewTextInput"
+                                                    Tag="1"
+                                                    Text="{Binding Axes[1].InputText, UpdateSourceTrigger=PropertyChanged}"
+                                                    TextChanged="NumericInput_TextChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="BorderBrush" Value="#E5E5EA" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Axes[1].IsInputValid}" Value="False">
+                                                                    <Setter Property="BorderBrush" Value="#FF3B30" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                                <Button
+                                                    Width="54"
+                                                    Height="34"
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding ExecuteNumericMoveCommand}"
+                                                    CommandParameter="1"
+                                                    Content="执行"
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding StopAxisCommand}"
+                                                    CommandParameter="1"
+                                                    Content="停止"
+                                                    Style="{StaticResource StopButton}" />
+                                                <!--  错误提示已移至设备日志  -->
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!--  ====== 组 2: 直线轴 Y / X / Z ======  -->
+                            <Border
+                                Grid.Row="1"
+                                Margin="0,0,0,9"
+                                Padding="6,4"
+                                Background="#F8F8FA"
+                                BorderBrush="#D1D1D6"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                                <Grid Grid.IsSharedSizeScope="True">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Margin="4,0,0,4"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="#8E8E93"
+                                        Text="直线轴  Y / X / Z" />
+
+                                    <!--  Axis 2: Y(平移)  -->
+                                    <Border
+                                        Grid.Row="1"
+                                        Margin="0,0,0,2"
+                                        Style="{StaticResource AxisRowBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Gap1" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Position" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Unit" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Status" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Controls" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="#1D1D1F"
+                                                Text="{Binding Axes[2].AxisName}" />
+                                            <Border Grid.Column="1" Width="6" />
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="20"
+                                                FontWeight="Bold"
+                                                Foreground="#007AFF"
+                                                Text="{Binding Axes[2].CurrentPosition, StringFormat={}{0:F3}}" />
+                                            <Ellipse
+                                                Grid.Column="4"
+                                                Width="12"
+                                                Height="12"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Stroke" Value="#1D1D1F" />
+                                                        <Setter Property="StrokeThickness" Value="1" />
+                                                        <Setter Property="Fill" Value="#34C759" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Axes[2].IsRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#FF3B30" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsJogMode, Converter={StaticResource BoolToVis}}">
+                                                <Button
+                                                    x:Name="JogYMinus"
+                                                    Content="-"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogMinusButton}"
+                                                    Tag="2-" />
+                                                <Border
+                                                    Width="1"
+                                                    Margin="20,0,20,0"
+                                                    VerticalAlignment="Stretch"
+                                                    Background="#000000" />
+                                                <Button
+                                                    x:Name="JogYPlus"
+                                                    Content="+"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogPlusButton}"
+                                                    Tag="2+" />
+                                            </StackPanel>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsNumericMode, Converter={StaticResource BoolToVis}}">
+                                                <TextBox
+                                                    Width="80"
+                                                    Height="34"
+                                                    VerticalContentAlignment="Center"
+                                                    FontFamily="Consolas"
+                                                    FontSize="14"
+                                                    PreviewTextInput="NumericInput_PreviewTextInput"
+                                                    Tag="2"
+                                                    Text="{Binding Axes[2].InputText, UpdateSourceTrigger=PropertyChanged}"
+                                                    TextChanged="NumericInput_TextChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="BorderBrush" Value="#E5E5EA" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Axes[2].IsInputValid}" Value="False">
+                                                                    <Setter Property="BorderBrush" Value="#FF3B30" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                                <Button
+                                                    Width="60"
+                                                    Height="34"
+                                                    Margin="3,0,0,0"
+                                                    Padding="6,0"
+                                                    Command="{Binding ExecuteNumericMoveCommand}"
+                                                    CommandParameter="2"
+                                                    Content="执行"
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding StopAxisCommand}"
+                                                    CommandParameter="2"
+                                                    Content="停止"
+                                                    Style="{StaticResource StopButton}" />
+                                                <!--  错误提示已移至设备日志  -->
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  Axis 3: X(平移)  -->
+                                    <Border
+                                        Grid.Row="2"
+                                        Margin="0,0,0,2"
+                                        Style="{StaticResource AxisRowBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Gap1" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Position" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Unit" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Status" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Controls" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="#1D1D1F"
+                                                Text="{Binding Axes[3].AxisName}" />
+                                            <Border Grid.Column="1" Width="6" />
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="20"
+                                                FontWeight="Bold"
+                                                Foreground="#007AFF"
+                                                Text="{Binding Axes[3].CurrentPosition, StringFormat={}{0:F3}}" />
+                                            <Ellipse
+                                                Grid.Column="4"
+                                                Width="12"
+                                                Height="12"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Stroke" Value="#1D1D1F" />
+                                                        <Setter Property="StrokeThickness" Value="1" />
+                                                        <Setter Property="Fill" Value="#34C759" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Axes[3].IsRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#FF3B30" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsJogMode, Converter={StaticResource BoolToVis}}">
+                                                <Button
+                                                    x:Name="JogXMinus"
+                                                    Content="-"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogMinusButton}"
+                                                    Tag="3-" />
+                                                <Border
+                                                    Width="1"
+                                                    Margin="20,0,20,0"
+                                                    VerticalAlignment="Stretch"
+                                                    Background="#000000" />
+                                                <Button
+                                                    x:Name="JogXPlus"
+                                                    Content="+"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogPlusButton}"
+                                                    Tag="3+" />
+                                            </StackPanel>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsNumericMode, Converter={StaticResource BoolToVis}}">
+                                                <TextBox
+                                                    Width="80"
+                                                    Height="34"
+                                                    VerticalContentAlignment="Center"
+                                                    FontFamily="Consolas"
+                                                    FontSize="14"
+                                                    PreviewTextInput="NumericInput_PreviewTextInput"
+                                                    Tag="3"
+                                                    Text="{Binding Axes[3].InputText, UpdateSourceTrigger=PropertyChanged}"
+                                                    TextChanged="NumericInput_TextChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="BorderBrush" Value="#E5E5EA" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Axes[3].IsInputValid}" Value="False">
+                                                                    <Setter Property="BorderBrush" Value="#FF3B30" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                                <Button
+                                                    Width="60"
+                                                    Height="34"
+                                                    Margin="3,0,0,0"
+                                                    Padding="6,0"
+                                                    Command="{Binding ExecuteNumericMoveCommand}"
+                                                    CommandParameter="3"
+                                                    Content="执行"
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding StopAxisCommand}"
+                                                    CommandParameter="3"
+                                                    Content="停止"
+                                                    Style="{StaticResource StopButton}" />
+                                                <!--  错误提示已移至设备日志  -->
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  Axis 4: Z(平移)  -->
+                                    <Border
+                                        Grid.Row="3"
+                                        Margin="0,0,0,2"
+                                        Style="{StaticResource AxisRowBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Gap1" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Position" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Unit" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Status" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Controls" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="#1D1D1F"
+                                                Text="{Binding Axes[4].AxisName}" />
+                                            <Border Grid.Column="1" Width="6" />
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="20"
+                                                FontWeight="Bold"
+                                                Foreground="#007AFF"
+                                                Text="{Binding Axes[4].CurrentPosition, StringFormat={}{0:F3}}" />
+                                            <Ellipse
+                                                Grid.Column="4"
+                                                Width="12"
+                                                Height="12"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Stroke" Value="#1D1D1F" />
+                                                        <Setter Property="StrokeThickness" Value="1" />
+                                                        <Setter Property="Fill" Value="#34C759" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Axes[4].IsRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#FF3B30" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsJogMode, Converter={StaticResource BoolToVis}}">
+                                                <Button
+                                                    x:Name="JogZMinus"
+                                                    Content="-"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogMinusButton}"
+                                                    Tag="4-" />
+                                                <Border
+                                                    Width="1"
+                                                    Margin="20,0,20,0"
+                                                    VerticalAlignment="Stretch"
+                                                    Background="#000000" />
+                                                <Button
+                                                    x:Name="JogZPlus"
+                                                    Content="+"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogPlusButton}"
+                                                    Tag="4+" />
+                                            </StackPanel>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsNumericMode, Converter={StaticResource BoolToVis}}">
+                                                <TextBox
+                                                    Width="80"
+                                                    Height="34"
+                                                    VerticalContentAlignment="Center"
+                                                    FontFamily="Consolas"
+                                                    FontSize="14"
+                                                    PreviewTextInput="NumericInput_PreviewTextInput"
+                                                    Tag="4"
+                                                    Text="{Binding Axes[4].InputText, UpdateSourceTrigger=PropertyChanged}"
+                                                    TextChanged="NumericInput_TextChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="BorderBrush" Value="#E5E5EA" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Axes[4].IsInputValid}" Value="False">
+                                                                    <Setter Property="BorderBrush" Value="#FF3B30" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                                <Button
+                                                    Width="60"
+                                                    Height="34"
+                                                    Margin="3,0,0,0"
+                                                    Padding="6,0"
+                                                    Command="{Binding ExecuteNumericMoveCommand}"
+                                                    CommandParameter="4"
+                                                    Content="执行"
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding StopAxisCommand}"
+                                                    CommandParameter="4"
+                                                    Content="停止"
+                                                    Style="{StaticResource StopButton}" />
+                                                <!--  错误提示已移至设备日志  -->
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!--  ====== 组 3: 植入轴 I ======  -->
+                            <Border
+                                Grid.Row="2"
+                                Padding="6,4"
+                                Background="#F8F8FA"
+                                BorderBrush="#D1D1D6"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                                <Grid Grid.IsSharedSizeScope="True">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Margin="4,0,0,4"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="#8E8E93"
+                                        Text="植入轴  I" />
+
+                                    <!--  Axis 5: I(植入)  -->
+                                    <Border Grid.Row="1" Style="{StaticResource AxisRowBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Gap1" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Position" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Unit" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Status" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Controls" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="#1D1D1F"
+                                                Text="{Binding Axes[5].AxisName}" />
+                                            <Border Grid.Column="1" Width="6" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="20"
+                                                FontWeight="Bold"
+                                                Foreground="#007AFF"
+                                                Text="{Binding Axes[5].CurrentPosition, StringFormat={}{0:F3}}" />
+                                            <Ellipse
+                                                Grid.Column="4"
+                                                Width="12"
+                                                Height="12"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Stroke" Value="#1D1D1F" />
+                                                        <Setter Property="StrokeThickness" Value="1" />
+                                                        <Setter Property="Fill" Value="#34C759" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Axes[5].IsRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#FF3B30" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsJogMode, Converter={StaticResource BoolToVis}}">
+                                                <Button
+                                                    x:Name="JogIMinus"
+                                                    Content="-"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogMinusButton}"
+                                                    Tag="5-" />
+                                                <Border
+                                                    Width="1"
+                                                    Margin="20,0,20,0"
+                                                    VerticalAlignment="Stretch"
+                                                    Background="#000000" />
+                                                <Button
+                                                    x:Name="JogIPlus"
+                                                    Content="+"
+                                                    MouseLeave="JogButton_MouseLeave"
+                                                    PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                                                    PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                                                    Style="{StaticResource JogPlusButton}"
+                                                    Tag="5+" />
+                                            </StackPanel>
+
+                                            <StackPanel
+                                                Grid.Column="6"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsNumericMode, Converter={StaticResource BoolToVis}}">
+                                                <TextBox
+                                                    Width="80"
+                                                    Height="34"
+                                                    VerticalContentAlignment="Center"
+                                                    FontFamily="Consolas"
+                                                    FontSize="14"
+                                                    PreviewTextInput="NumericInput_PreviewTextInput"
+                                                    Tag="5"
+                                                    Text="{Binding Axes[5].InputText, UpdateSourceTrigger=PropertyChanged}"
+                                                    TextChanged="NumericInput_TextChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="BorderBrush" Value="#E5E5EA" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Axes[5].IsInputValid}" Value="False">
+                                                                    <Setter Property="BorderBrush" Value="#FF3B30" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                                <Button
+                                                    Width="60"
+                                                    Height="34"
+                                                    Margin="3,0,0,0"
+                                                    Padding="6,0"
+                                                    Command="{Binding ExecuteNumericMoveCommand}"
+                                                    CommandParameter="5"
+                                                    Content="执行"
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Margin="3,0,0,0"
+                                                    Padding="4,0"
+                                                    Command="{Binding StopAxisCommand}"
+                                                    CommandParameter="5"
+                                                    Content="停止"
+                                                    Style="{StaticResource StopButton}" />
+                                                <!--  错误提示已移至设备日志  -->
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!--  上中：五点记录  -->
+                <Border
+                    Grid.Column="1"
+                    Margin="5,0,5,0"
+                    Padding="10"
+                    Style="{StaticResource MaterialCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="#1D1D1F"
+                                Text="五点记录" />
+                            <!--  调平状态指示  -->
+                            <Border
+                                Grid.Column="1"
+                                Padding="12,3"
+                                HorizontalAlignment="Right"
+                                CornerRadius="4">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#FFF0F0" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSkullLeveled}" Value="True">
+                                                <Setter Property="Background" Value="#E5F9EA" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontSize="13" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="未调平" />
+                                            <Setter Property="Foreground" Value="#FF3B30" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSkullLeveled}" Value="True">
+                                                    <Setter Property="Text" Value="已调平" />
+                                                    <Setter Property="Foreground" Value="#34C759" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Grid.IsSharedSizeScope="True">
+                                    <!--  ====== 初定位 ======  -->
+                                    <Border
+                                        Margin="0,0,0,5"
+                                        Padding="6,3"
+                                        Background="#EBF5FF"
+                                        CornerRadius="4"
+                                        HorizontalAlignment="Stretch">
+                                        <TextBlock
+                                            FontSize="13"
+                                            FontWeight="SemiBold"
+                                            Foreground="#0071E3"
+                                            Text="初定位" />
+                                    </Border>
+
+                                    <!--  步骤 1: 设置前囟点  -->
+                                    <Border Style="{StaticResource FivePointStepBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="FivePLabel" />
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="115" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                Style="{StaticResource FivePointStepLabel}"
+                                                Text="1. 设置前囟点" />
+                                            <Grid Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="70" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="70" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="70" />
+                                                </Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Grid.ColumnSpan="3"
+                                                        Height="34" Padding="10,5"
+                                                        HorizontalAlignment="Stretch"
+                                                        Command="{Binding SetBregmaCommand}" Content="设置"
+                                                        FontSize="13" FontWeight="SemiBold"
+                                                        Style="{StaticResource PrimaryButton}" />
+                                                <Button Grid.Column="4" Width="70"
+                                                        Height="34" Padding="10,5"
+                                                        Command="{Binding DeleteBregmaCommand}" Content="删除"
+                                                        FontSize="13" FontWeight="SemiBold"
+                                                        Style="{StaticResource MaterialButton}" />
+                                            </Grid>
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="18"
+                                                FontWeight="Bold"
+                                                Foreground="#34C759"
+                                                Text="✓">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Opacity" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBregmaSet}" Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                                                Storyboard.TargetProperty="Opacity"
+                                                                                To="1"
+                                                                                Duration="0:0:0.3" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                                <DataTrigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                                                Storyboard.TargetProperty="Opacity"
+                                                                                To="0"
+                                                                                Duration="0:0:0.1" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.ExitActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  步骤 2: 设置后囟点  -->
+                                    <Border Style="{StaticResource FivePointStepBorder}">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="FivePLabel" />
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="115" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    Style="{StaticResource FivePointStepLabel}"
+                                                    Text="2. 设置后囟点" />
+                                                <Grid Grid.Column="2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="70" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Grid.Column="0" Grid.ColumnSpan="3"
+                                                            Height="34" Padding="10,5"
+                                                            HorizontalAlignment="Stretch"
+                                                            Command="{Binding SetLambdaCommand}" Content="设置"
+                                                            FontSize="13" FontWeight="SemiBold"
+                                                            Style="{StaticResource PrimaryButton}" />
+                                                    <Button Grid.Column="4" Width="70"
+                                                            Height="34" Padding="10,5"
+                                                            Command="{Binding DeleteLambdaCommand}" Content="删除"
+                                                            FontSize="13" FontWeight="SemiBold"
+                                                            Style="{StaticResource MaterialButton}" />
+                                                </Grid>
+                                                <TextBlock
+                                                    Grid.Column="3"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="18"
+                                                    FontWeight="Bold"
+                                                    Foreground="#34C759"
+                                                    Text="✓">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Opacity" Value="0" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsLambdaSet}" Value="True">
+                                                                    <DataTrigger.EnterActions>
+                                                                        <BeginStoryboard>
+                                                                            <Storyboard>
+                                                                                <DoubleAnimation
+                                                                                    Storyboard.TargetProperty="Opacity"
+                                                                                    To="1"
+                                                                                    Duration="0:0:0.3" />
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </DataTrigger.EnterActions>
+                                                                    <DataTrigger.ExitActions>
+                                                                        <BeginStoryboard>
+                                                                            <Storyboard>
+                                                                                <DoubleAnimation
+                                                                                    Storyboard.TargetProperty="Opacity"
+                                                                                    To="0"
+                                                                                    Duration="0:0:0.1" />
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </DataTrigger.ExitActions>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <TextBlock
+                                                Margin="0,2,0,0"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="#6E6E73"
+                                                Text="{Binding BregmaLambdaDvInfo}" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  步骤 3: 前后囟中点  -->
+                                    <Border Style="{StaticResource FivePointStepBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="FivePLabel" />
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="115" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                Style="{StaticResource FivePointStepLabel}"
+                                                Text="3. 前后囟中点" />
+                                            <Grid Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="70" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="70" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="70" />
+                                                </Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Width="70" Height="34" Padding="10,5"
+                                                        Command="{Binding MoveToMidpointCommand}" Content="移动至"
+                                                        FontSize="13" FontWeight="SemiBold">
+                                                    <Button.Style>
+                                                        <Style BasedOn="{StaticResource MaterialButton}" TargetType="Button">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding CanMoveToMidpoint}" Value="True">
+                                                                    <Setter Property="IsEnabled" Value="True" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                <Button Grid.Column="2" Width="70" Height="34" Padding="10,5"
+                                                        Command="{Binding SetMidpointCommand}" Content="设置"
+                                                        FontSize="13" FontWeight="SemiBold"
+                                                        Style="{StaticResource PrimaryButton}" />
+                                                <Button Grid.Column="4" Width="70" Height="34" Padding="10,5"
+                                                        Command="{Binding DeleteMidpointCommand}" Content="删除"
+                                                        FontSize="13" FontWeight="SemiBold"
+                                                        Style="{StaticResource MaterialButton}" />
+                                            </Grid>
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="18"
+                                                FontWeight="Bold"
+                                                Foreground="#34C759"
+                                                Text="✓">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Opacity" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMidpointSet}" Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                                                Storyboard.TargetProperty="Opacity"
+                                                                                To="1"
+                                                                                Duration="0:0:0.3" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                                <DataTrigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                                                Storyboard.TargetProperty="Opacity"
+                                                                                To="0"
+                                                                                Duration="0:0:0.1" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.ExitActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  步骤 4: 左位点  -->
+                                    <Border Style="{StaticResource FivePointStepBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="FivePLabel" />
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="115" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                Style="{StaticResource FivePointStepLabel}"
+                                                Text="4. 左位点" />
+                                            <Grid Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="70" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="70" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="70" />
+                                                </Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Width="70" Height="34" Padding="10,5"
+                                                        Command="{Binding MoveToMidLeftCommand}" Content="移动至"
+                                                        FontSize="13" FontWeight="SemiBold">
+                                                    <Button.Style>
+                                                        <Style BasedOn="{StaticResource MaterialButton}" TargetType="Button">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding CanMoveToMidLeft}" Value="True">
+                                                                    <Setter Property="IsEnabled" Value="True" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                <Button Grid.Column="2" Width="70" Height="34" Padding="10,5"
+                                                        Command="{Binding SetMidLeftCommand}" Content="设置"
+                                                        FontSize="13" FontWeight="SemiBold"
+                                                        Style="{StaticResource PrimaryButton}" />
+                                                <Button Grid.Column="4" Width="70" Height="34" Padding="10,5"
+                                                        Command="{Binding DeleteMidLeftCommand}" Content="删除"
+                                                        FontSize="13" FontWeight="SemiBold"
+                                                        Style="{StaticResource MaterialButton}" />
+                                            </Grid>
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="18"
+                                                FontWeight="Bold"
+                                                Foreground="#34C759"
+                                                Text="✓">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Opacity" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMidLeftSet}" Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                                                Storyboard.TargetProperty="Opacity"
+                                                                                To="1"
+                                                                                Duration="0:0:0.3" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                                <DataTrigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                                                Storyboard.TargetProperty="Opacity"
+                                                                                To="0"
+                                                                                Duration="0:0:0.1" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.ExitActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  步骤 5: 右位点  -->
+                                    <Border Style="{StaticResource FivePointStepBorder}">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="FivePLabel" />
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="115" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    Style="{StaticResource FivePointStepLabel}"
+                                                    Text="5. 右位点" />
+                                                <Grid Grid.Column="2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="70" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Grid.Column="0" Width="70" Height="34" Padding="10,5"
+                                                            Command="{Binding MoveToMidRightCommand}" Content="移动至"
+                                                            FontSize="13" FontWeight="SemiBold">
+                                                        <Button.Style>
+                                                            <Style BasedOn="{StaticResource MaterialButton}" TargetType="Button">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding CanMoveToMidRight}" Value="True">
+                                                                        <Setter Property="IsEnabled" Value="True" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                    <Button Grid.Column="2" Width="70" Height="34" Padding="10,5"
+                                                            Command="{Binding SetMidRightCommand}" Content="设置"
+                                                            FontSize="13" FontWeight="SemiBold"
+                                                            Style="{StaticResource PrimaryButton}" />
+                                                    <Button Grid.Column="4" Width="70" Height="34" Padding="10,5"
+                                                            Command="{Binding DeleteMidRightCommand}" Content="删除"
+                                                            FontSize="13" FontWeight="SemiBold"
+                                                            Style="{StaticResource MaterialButton}" />
+                                                </Grid>
+                                                <TextBlock
+                                                    Grid.Column="3"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="18"
+                                                    FontWeight="Bold"
+                                                    Foreground="#34C759"
+                                                    Text="✓">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Opacity" Value="0" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsMidRightSet}" Value="True">
+                                                                    <DataTrigger.EnterActions>
+                                                                        <BeginStoryboard>
+                                                                            <Storyboard>
+                                                                                <DoubleAnimation
+                                                                                    Storyboard.TargetProperty="Opacity"
+                                                                                    To="1"
+                                                                                    Duration="0:0:0.3" />
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </DataTrigger.EnterActions>
+                                                                    <DataTrigger.ExitActions>
+                                                                        <BeginStoryboard>
+                                                                            <Storyboard>
+                                                                                <DoubleAnimation
+                                                                                    Storyboard.TargetProperty="Opacity"
+                                                                                    To="0"
+                                                                                    Duration="0:0:0.1" />
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </DataTrigger.ExitActions>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <TextBlock
+                                                Margin="0,2,0,0"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="#6E6E73"
+                                                Text="{Binding MidLeftRightDvInfo}" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  "查看配准" 按钮 —— 在初定位流程完成后可查看  -->
+                                    <Button
+                                        Height="36"
+                                        Margin="0,4,0,0"
+                                        Padding="12,0"
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding OpenRegistrationCommand}"
+                                        Content="查看配准"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Style="{StaticResource PrimaryButton}" />
+
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!--  ====== 重定位 ======  -->
+                            <StackPanel Grid.Row="1">
+                                <Border
+                                    Margin="0,5,0,5"
+                                    Padding="6,3"
+                                    Background="#EBF5FF"
+                                    CornerRadius="4"
+                                    HorizontalAlignment="Stretch">
+                                    <TextBlock
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        Foreground="#0071E3"
+                                        Text="重定位" />
+                                </Border>
+
+                                <Border
+                                    Padding="12,10"
+                                    Background="#FAFAFC"
+                                    BorderBrush="#E8E8EC"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    HorizontalAlignment="Stretch">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2"
+                                            Height="36"
+                                            HorizontalAlignment="Stretch"
+                                            Command="{Binding RelocateCommand}"
+                                            Content="重定位"
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Style="{StaticResource PrimaryButton}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!--  上右：当前方位  -->
+                <Border
+                    Grid.Column="2"
+                    Margin="5,0,0,0"
+                    Padding="15"
+                    Style="{StaticResource MaterialCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource CardTitle}" Text="当前方位" />
+                        <TextBlock
+                            FontSize="14"
+                            Foreground="#86868B"
+                            Text="AP / ML / DV / Rot / Pitch（待实现）"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!--  ===================== 下行：设备日志 =====================  -->
+            <Border
+                Grid.Row="1"
+                Padding="15"
+                Style="{StaticResource MaterialCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        Grid.Row="0"
+                        Style="{StaticResource CardTitle}"
+                        Text="设备日志" />
+                    <TextBox
+                        x:Name="LogTextBox"
+                        Grid.Row="1"
+                        AcceptsReturn="True"
+                        Background="#1A1A2E"
+                        BorderBrush="#2D2D44"
+                        BorderThickness="1"
+                        CaretBrush="#00FF88"
+                        FontFamily="Consolas"
+                        FontSize="12"
+                        Foreground="#CCCCCC"
+                        IsReadOnly="True"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        Text="{Binding LogText, Mode=OneWay}"
+                        TextChanged="LogTextBox_TextChanged"
+                        TextWrapping="Wrap" />
+                </Grid>
+            </Border>
+
+            <!--  ===================== 底部：全局急停 =====================  -->
+            <Border Grid.Row="2" Padding="0,8,0,0">
+                <Button
+                    Command="{Binding EmergencyStopCommand}"
+                    Content="全 局 急 停"
+                    Style="{StaticResource EmergencyStopButton}" />
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

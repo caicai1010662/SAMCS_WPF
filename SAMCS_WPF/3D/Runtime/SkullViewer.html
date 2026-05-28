@@ -310,8 +310,8 @@
         controls.minDistance = 2;
         controls.maxDistance = 3.2;
         controls.target.set(0, 0, 0);
-        controls.minPolarAngle = 0.5;
-        controls.maxPolarAngle = 1.0;
+        controls.minPolarAngle = 0.1;
+        controls.maxPolarAngle = 0.7;
         controls.enabled = true;      // 允许鼠标交互
         controls.enablePan = false;   // 禁止拖动平移，仅允许旋转+缩放
         controls.update();
@@ -351,7 +351,7 @@
 
         // ===================== 5. 圆形地面 =====================
         const groundPlane = new THREE.Mesh(
-            new THREE.CircleGeometry(1.1, 48),
+            new THREE.CircleGeometry(0.8, 48),
             new THREE.MeshStandardMaterial({ color: 0x333840, roughness: 0.85, metalness: 0.05 })
         );
         groundPlane.rotation.x = -Math.PI / 2;
@@ -452,7 +452,7 @@
                     + ' 中心=(' + center.x.toFixed(3) + ', ' + center.y.toFixed(3) + ', ' + center.z.toFixed(3) + ')');
 
                 // 【可调参数】地面高度，必须和圆形地面的 position.y 保持一致
-                const GROUND_Y = -0.25;
+                const GROUND_Y = -0.35;
 
                 // 自动缩放：以包围盒最大边为基准，等比缩放至目标尺寸
                 const maxDim = Math.max(size.x, size.y, size.z);

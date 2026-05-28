@@ -92,7 +92,7 @@
         controls.minDistance = 2;
         controls.maxDistance = 3;
         controls.target.set(0, 0.25, 0);
-        controls.minPolarAngle = 0.9;
+        controls.minPolarAngle = 1.2;
         controls.maxPolarAngle = 1.4;
         controls.update();
 
@@ -118,7 +118,7 @@
 
         // ===================== 5. 圆形深色地面 =====================
         const groundPlane = new THREE.Mesh(
-            new THREE.CircleGeometry(4, 48),
+            new THREE.CircleGeometry(1.6, 48),
             new THREE.MeshStandardMaterial({ color: 0x333840, roughness: 0.85, metalness: 0.05 })
         );
         groundPlane.rotation.x = -Math.PI / 2;
@@ -128,7 +128,7 @@
         scene.add(groundPlane);
 
         // ===================== 6. 探针末端轨迹追踪组件 =====================
-        const MAX_TRAJECTORY_POINTS = 50;
+        const MAX_TRAJECTORY_POINTS = 20;
         const trajectoryPositions = new Float32Array(MAX_TRAJECTORY_POINTS * 3);
 
         const trajectoryGeometry = new THREE.BufferGeometry();
