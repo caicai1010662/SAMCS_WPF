@@ -160,8 +160,13 @@
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
 
-        #pose-apply:hover { background: #4A7BE0; }
-        #pose-apply:active { background: #2A5BC0; }
+        #pose-apply:hover {
+            background: #4A7BE0;
+        }
+
+        #pose-apply:active {
+            background: #2A5BC0;
+        }
 
         #pose-toggle-axes {
             height: 24px;
@@ -174,7 +179,98 @@
             font-size: 11px;
             white-space: nowrap;
         }
-        #pose-toggle-axes:hover { background: #4A4A60; }
+
+        #pose-toggle-axes:hover {
+            background: #4A4A60;
+        }
+
+        /* ---------- 底部图例 ---------- */
+        #legend-bar {
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            z-index: 10;
+            display: flex;
+            align-items: stretch;
+            gap: 18px;
+            padding: 6px 16px;
+            background: rgba(20, 20, 35, 0.88);
+            border-radius: 6px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .legend-col {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #BBBBCC;
+            height: 16px;
+            line-height: 16px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .legend-divider {
+            width: 1px;
+            background: #3A3A4A;
+            border-radius: 0;
+            align-self: stretch;
+        }
+
+        .legend-axis-arrow {
+            flex-shrink: 0;
+        }
+
+        /* ---------- 右下角透明度控件 ---------- */
+        #opacity-ctrl {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: rgba(20, 20, 35, 0.88);
+            border-radius: 6px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #opacity-ctrl label {
+            color: #8899AA;
+            font-size: 10px;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        #opacity-slider {
+            width: 72px;
+            height: 4px;
+            accent-color: #8899AA;
+            cursor: pointer;
+        }
+
+        #opacity-value {
+            width: 30px;
+            text-align: right;
+            color: #CCCCCC;
+            font-size: 10px;
+            font-family: 'Consolas', monospace;
+        }
     </style>
 </head>
 
@@ -246,10 +342,58 @@
                 <!--  颅骨切除 + 刷新  -->
                 <div class="ctrl-row">
                     <span class="pose-label"></span>
-                    <button id="btn-craniotomy" style="height:28px;padding:0 12px;background:#8B3A3A;color:#FFF;border:none;border-radius:3px;cursor:pointer;font-size:11px;">颅骨切除 1.5mm</button>
-                    <button id="btn-refresh" style="height:28px;padding:0 12px;background:#3A3A50;color:#CCC;border:none;border-radius:3px;cursor:pointer;font-size:11px;">刷新</button>
+                    <button id="btn-craniotomy"
+                        style="height:28px;padding:0 12px;background:#8B3A3A;color:#FFF;border:none;border-radius:3px;cursor:pointer;font-size:11px;">颅骨切除
+                        1.5mm</button>
+                    <button id="btn-refresh"
+                        style="height:28px;padding:0 12px;background:#3A3A50;color:#CCC;border:none;border-radius:3px;cursor:pointer;font-size:11px;">刷新</button>
                 </div>
             </div>
+        </div>
+
+        <!--  底部图例条  -->
+        <div id="legend-bar">
+            <!--  左列：五点标记  -->
+            <div class="legend-col">
+                <div class="legend-item"><span class="legend-dot" style="background:#E91E63;"></span>Bregma</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#00BCD4;"></span>Lambda</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#FFC107;"></span>Midpoint</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#4CAF50;"></span>MidLeft</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#FF5722;"></span>MidRight</div>
+            </div>
+            <!--  分隔线  -->
+            <span class="legend-divider"></span>
+            <!--  右列：坐标轴方向（双向彩色箭头）  -->
+            <div class="legend-col">
+                <div class="legend-item">
+                    <svg class="legend-axis-arrow" width="28" height="12" viewBox="0 0 28 12">
+                        <line x1="2" y1="6" x2="22" y2="6" stroke="#00CC66" stroke-width="1.8" />
+                        <polygon points="28,6 20,2 20,10" fill="#00CC66" />
+                    </svg>
+                    AP
+                </div>
+                <div class="legend-item">
+                    <svg class="legend-axis-arrow" width="28" height="12" viewBox="0 0 28 12">
+                        <line x1="2" y1="6" x2="22" y2="6" stroke="#FF3333" stroke-width="1.8" />
+                        <polygon points="28,6 20,2 20,10" fill="#FF3333" />
+                    </svg>
+                    ML
+                </div>
+                <div class="legend-item">
+                    <svg class="legend-axis-arrow" width="28" height="12" viewBox="0 0 28 12">
+                        <line x1="2" y1="6" x2="22" y2="6" stroke="#3388FF" stroke-width="1.8" />
+                        <polygon points="28,6 20,2 20,10" fill="#3388FF" />
+                    </svg>
+                    DV
+                </div>
+            </div>
+        </div>
+
+        <!--  右下角颅骨透明度控件  -->
+        <div id="opacity-ctrl">
+            <label>Opacity</label>
+            <input type="range" id="opacity-slider" min="10" max="100" value="100" />
+            <span id="opacity-value">1.00</span>
         </div>
     </div>
 
@@ -322,7 +466,7 @@
         const _miniH = 0.010;    // 箭头高
         const miniAxes = new THREE.Group();
         miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(), _miniLen, 0x00CC66, _miniH, _miniR)); // AP 绿
-        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0),  new THREE.Vector3(), _miniLen, 0xFF3333, _miniH, _miniR)); // ML 红
+        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), _miniLen, 0xFF3333, _miniH, _miniR)); // ML 红
         miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(), _miniLen, 0x3388FF, _miniH, _miniR)); // DV 蓝
         // 放在屏幕左下：相机局部坐标 X 负(左) Y 负(下) Z 负(前)
         miniAxes.position.set(-0.035, -0.024, -0.12);
@@ -333,7 +477,7 @@
         scene.add(new THREE.HemisphereLight(0xffffff, 0xebd9d3, 0.5));
 
         const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
-        keyLight.position.set(4, 6, 3);
+        keyLight.position.set(0, 6, 0);
         keyLight.castShadow = true;
         keyLight.shadow.mapSize.set(1024, 1024);
         keyLight.shadow.camera.near = 0.1;
@@ -352,7 +496,7 @@
         // ===================== 5. 圆形地面 =====================
         const groundPlane = new THREE.Mesh(
             new THREE.CircleGeometry(0.8, 48),
-            new THREE.MeshStandardMaterial({ color: 0x333840, roughness: 0.85, metalness: 0.05 })
+            new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.85, metalness: 0.05 })
         );
         groundPlane.rotation.x = -Math.PI / 2;
         groundPlane.position.y = -0.5;
@@ -396,11 +540,15 @@
         let _boxSize = null;
         let _markerNodes = [];
         let _markerSpheres = [];
+        let _markerRings = [];              // 标记点外围光环
         let _needleGroup = null;
         let _axisGroup = null;              // 脑立体坐标系 (AP/ML/DV 三轴 + 栅格)
         let _axisBaseScale = 1.0;           // 坐标系创建时的 _mmToWorldScale，供缩放用
         let _mmToWorldScale = 0.001;        // mm→世界米 换算系数（加载后据 Bregma-Lambda 实测更新）
         let _cameraLockedToNeedle = false;  // 相机是否跟随针尖
+        let _apDir = new THREE.Vector3();  // AP 轴方向（前），从标记点动态计算
+        let _mlDir = new THREE.Vector3();  // ML 轴方向（右），从标记点动态计算
+        let _dvDir = new THREE.Vector3();  // DV 轴方向（腹），cross(AP, ML) 正交得出
         // DOM 缓存：位姿输入框，_initPoseBar 中初始化
         let _elAp = null, _elMl = null, _elDv = null, _elRot = null, _elPit = null;
         const loader = new GLTFLoader();
@@ -473,52 +621,79 @@
 
                 scene.add(_skullModel);
 
-                // 颅骨解剖标记点渲染：5 个球逐个配置
-                // 每个标记点独立定义半径和材质参数
-                //
-                // 【调参指南 — 所有尺寸单位均为 mm】
-                //   radius  → 球半径 (mm)
-                //   color   → 表面颜色 (0xRRGGBB)
-                //   emissive→ 自发光颜色，暗处也能看到
-                //   roughness → 粗糙度 (0=镜面, 1=磨砂)
-                //   metalness → 金属度 (0=塑料, 1=金属)
+                // ====== 颅骨解剖标记点渲染 ======
+                // 【可调参数 — 所有尺寸单位均为 mm】
+                //   radius    → 球半径(mm), 全部统一 9.5
+                //   color     → 表面颜色(0xRRGGBB, 五色区分)
+                //   roughness → 粗糙度(0=镜面, 1=磨砂)
+                //   metalness → 金属度(0=塑料, 1=金属)
                 const markerConfigs = [
-                    // Point_1_Bregma — 前囟（基准原点）
-                    { name: 'Point_1_Bregma', radius: 9.5, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
-                    // Point_2_Lambda — 人字缝（后囟）
-                    { name: 'Point_2_Lambda', radius: 9.5, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
-                    // Point_3_Midpoint — 前后囟中点
-                    { name: 'Point_3_Midpoint', radius: 15, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
-                    // Point_4_MidLeft — 左侧中点
-                    { name: 'Point_4_MidLeft', radius: 13, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 },
-                    // Point_5_MidRight — 右侧中点
-                    { name: 'Point_5_MidRight', radius: 11.5, color: 0xFF0000, emissive: 0x330000, roughness: 0.3, metalness: 0.1 }
+                    // Point_1_Bregma — 前囟（基准原点）品红
+                    { name: 'Point_1_Bregma', radius: 9.5, color: 0xE91E63, emissive: 0x2D000D, roughness: 0.25, metalness: 0.15 },
+                    // Point_2_Lambda — 人字缝（后囟）青色
+                    { name: 'Point_2_Lambda', radius: 9.5, color: 0x00BCD4, emissive: 0x001B20, roughness: 0.25, metalness: 0.15 },
+                    // Point_3_Midpoint — 前后囟中点 琥珀
+                    { name: 'Point_3_Midpoint', radius: 9.5, color: 0xFFC107, emissive: 0x2D1E00, roughness: 0.25, metalness: 0.15 },
+                    // Point_4_MidLeft — 左侧中点 翠绿
+                    { name: 'Point_4_MidLeft', radius: 9.5, color: 0x4CAF50, emissive: 0x0A1C0B, roughness: 0.25, metalness: 0.15 },
+                    // Point_5_MidRight — 右侧中点 橙红
+                    { name: 'Point_5_MidRight', radius: 9.5, color: 0xFF5722, emissive: 0x2D0C00, roughness: 0.25, metalness: 0.15 }
                 ];
 
                 for (let i = 0; i < markerConfigs.length; i++) {
                     const cfg = markerConfigs[i];
                     const pointNode = _skullModel.getObjectByName(cfg.name);
                     if (pointNode) {
-                        // 逐个创建几何体和材质，每个球独立可调
+                        // 球放在场景根下，用世界坐标定位，不受颅骨缩放影响
+                        const worldPos = new THREE.Vector3();
+                        pointNode.getWorldPosition(worldPos);
+
+                        // ---- 内核实心球 ----
                         const radiusM = cfg.radius / 1000.0;  // mm 转 米
-                        const geom = new THREE.SphereGeometry(radiusM, 16, 16);
+                        const geom = new THREE.SphereGeometry(radiusM, 32, 32);
                         const mat = new THREE.MeshStandardMaterial({
                             color: cfg.color,
                             roughness: cfg.roughness,
                             metalness: cfg.metalness,
                             emissive: cfg.emissive,
-                            emissiveIntensity: 0.5
+                            emissiveIntensity: 0.4
                         });
                         const sphere = new THREE.Mesh(geom, mat);
-                        // 球放在场景根下，用世界坐标定位，不受颅骨缩放影响
-                        const worldPos = new THREE.Vector3();
-                        pointNode.getWorldPosition(worldPos);
-                        sphere.position.copy(worldPos);
+                        // 将标记球略抬离颅骨表面（+Y 偏移），防止嵌在网格内被深度测试遮挡
+                        // 【可调参数】markerYOffset → 抬升高度(世界米)
+                        const markerYOffset = 0.008;
+                        sphere.position.set(worldPos.x, worldPos.y + markerYOffset, worldPos.z);
                         sphere.castShadow = true;
+                        sphere.renderOrder = 1;
+                        sphere.material.depthTest = true;
+                        sphere.material.depthWrite = true;
                         scene.add(sphere);
-                        // 保存引用，供缩放后更新位置
+
+                        // ---- 外围光环（Torus，平放在颅骨表面 XZ 平面） ----
+                        const ringRadius = 0.4 * _mmToWorldScale;  // 光环半径 0.4mm
+                        const tubeRadius = 0.015 * _mmToWorldScale;  // 管径 0.015mm
+                        const ringGeom = new THREE.TorusGeometry(ringRadius, tubeRadius, 16, 48);
+                        ringGeom.rotateX(Math.PI / 2);  // Torus 默认在 XY 面，旋转到 XZ 面
+                        const ringMat = new THREE.MeshStandardMaterial({
+                            color: cfg.color,
+                            roughness: 0.2,
+                            metalness: 0.05,
+                            emissive: cfg.color,
+                            emissiveIntensity: 0.6,
+                            transparent: true,
+                            opacity: 0.85,
+                            depthTest: true,
+                            depthWrite: false
+                        });
+                        const ring = new THREE.Mesh(ringGeom, ringMat);
+                        ring.position.set(worldPos.x, worldPos.y + markerYOffset, worldPos.z);
+                        ring.renderOrder = 0;
+                        scene.add(ring);
+
+                        // 保存引用
                         _markerNodes.push(pointNode);
                         _markerSpheres.push(sphere);
+                        _markerRings.push(ring);
                         console.log('标记点 ' + cfg.name + ': 世界坐标=('
                             + worldPos.x.toFixed(3) + ', ' + worldPos.y.toFixed(3) + ', ' + worldPos.z.toFixed(3) + ')');
                     }
@@ -541,12 +716,19 @@
                         + worldDist.toFixed(3) + 'm / 4.21mm)');
                 }
 
-                // 脑立体坐标系：以前囟为原点，三色轴标注 AP / ML / DV
-                _axisGroup = _createStereotaxicAxes();
-                scene.add(_axisGroup);
-
-                // 初始化底部控制条按钮事件
+                // 初始化 UI 控制（必须在创建坐标系之前，确保面板可用）
                 _initPoseBar();
+
+                // 从标记点计算真实解剖方向
+                _computeAnatomicalAxes();
+
+                // 脑立体坐标系：以前囟为原点，三色轴标注 AP / ML / DV
+                try {
+                    _axisGroup = _createStereotaxicAxes();
+                    scene.add(_axisGroup);
+                } catch (e) {
+                    console.error('坐标系创建失败: ' + e.message);
+                }
             },
             (progress) => {
                 if (progress.total > 0) {
@@ -564,6 +746,41 @@
             loaded: _modelLoaded,
             meshCount: _skullModel ? _skullModel.children.length : 0
         });
+
+        // ---------- 颅骨透明度 ----------
+
+        // 设置颅骨透明度，value 范围 0.1~1.0
+        window.setSkullOpacity = (value) => {
+            if (!_modelLoaded) {
+                return JSON.stringify({ ok: false, error: '模型尚未加载' });
+            }
+            var opacity = parseFloat(value);
+            if (isNaN(opacity)) opacity = 1.0;
+            if (opacity < 0.1) opacity = 0.1;
+            if (opacity > 1.0) opacity = 1.0;
+
+            _skullModel.traverse(function (child) {
+                if (child.isMesh) {
+                    child.material.transparent = opacity < 1.0;
+                    child.material.opacity = opacity;
+                    child.material.depthWrite = opacity >= 0.99;
+                    child.material.needsUpdate = true;
+                }
+            });
+
+            // 同步更新 DOM 滑块
+            var slider = document.getElementById('opacity-slider');
+            if (slider) {
+                slider.value = Math.round(opacity * 100);
+            }
+            var label = document.getElementById('opacity-value');
+            if (label) {
+                label.textContent = opacity.toFixed(2);
+            }
+
+            console.log('颅骨透明度: ' + opacity.toFixed(2));
+            return JSON.stringify({ ok: true, opacity: opacity });
+        };
 
         // ---------- 颅骨缩放 ----------
 
@@ -690,8 +907,8 @@
         // ap: 前后 (Anterior-Posterior)，单位 mm，Bregma 为 0，前方为正
         // ml: 左右 (Medial-Lateral)，单位 mm，中线为 0，右侧为正
         // dv: 背腹 (Dorsal-Ventral)，单位 mm，颅骨表面为 0，深入脑内为正
-        // rotation: 绕垂直轴旋转角，单位 度
-        // pitch: 偏离垂直方向倾角，单位 度
+        // rotation: 绕 DV 轴旋转角，单位 度
+        // pitch: 偏离 DV 轴倾角，单位 度
         window.setNeedlePose = (ap, ml, dv, rotation, pitch) => {
             if (!_needleGroup || _markerSpheres.length === 0) {
                 return JSON.stringify({ ok: false, error: '模型或标记点未就绪' });
@@ -699,32 +916,32 @@
 
             // Bregma 标记球 (索引 0) 的当前位置作为坐标原点
             var bregma = _markerSpheres[0].position;
-            // 使用加载时计算的 mm→世界米 换算系数（非固定 /1000）
-            var apM = ap * _mmToWorldScale;
-            var mlM = ml * _mmToWorldScale;
-            var dvM = dv * _mmToWorldScale;
+            // 使用加载时计算的 mm→世界米 换算系数
+            var S = _mmToWorldScale;
 
-            // 坐标映射：模型空间中，前= -Z，右= +X，上= +Y（所以深入 = -Y）
-            var worldX = bregma.x + mlM;
-            var worldY = bregma.y - dvM;
-            var worldZ = bregma.z - apM;
+            // 世界坐标 = Bregma + ap*_apDir*S + ml*_mlDir*S + dv*_dvDir*S
+            var worldX = bregma.x + ap * _apDir.x * S + ml * _mlDir.x * S + dv * _dvDir.x * S;
+            var worldY = bregma.y + ap * _apDir.y * S + ml * _mlDir.y * S + dv * _dvDir.y * S;
+            var worldZ = bregma.z + ap * _apDir.z * S + ml * _mlDir.z * S + dv * _dvDir.z * S;
 
             _needleGroup.position.set(worldX, worldY, worldZ);
 
-            // 设置角度：先绕 Y 轴旋转 (rotation)，再绕局部 X 轴倾斜 (pitch)
-            _needleGroup.rotation.order = 'YXZ';
-            _needleGroup.rotation.set(
-                THREE.MathUtils.degToRad(pitch),     // X — 倾角
-                THREE.MathUtils.degToRad(rotation),  // Y — 水平旋转
-                0                                    // Z
-            );
+            // 旋转：使定位针的本地 Y 轴（针杆方向）对齐到 DV 方向，
+            // 再绕 DV 轴旋转 rotation 度，再偏离 pitch 度
+            // 先用 lookAt 让针尖 +Y 对准 DV 方向
+            var dvTarget = new THREE.Vector3(worldX + _dvDir.x, worldY + _dvDir.y, worldZ + _dvDir.z);
+            _needleGroup.up.copy(_apDir);  // 针的"上方"对准 AP 方向
+            _needleGroup.lookAt(dvTarget);
+            // 额外旋转：绕本地 DV 轴转 rotation，绕本地 ML 轴转 pitch
+            _needleGroup.rotateOnWorldAxis(_dvDir, THREE.MathUtils.degToRad(rotation));
+            _needleGroup.rotateOnWorldAxis(_mlDir, THREE.MathUtils.degToRad(pitch));
 
             // 如果相机锁定针尖，同步更新轨道中心
             if (_cameraLockedToNeedle) {
                 controls.target.set(worldX, worldY, worldZ);
             }
 
-            // 同步更新 DOM 控制条输入框（C# 调用时也能看到数值变化）
+            // 同步更新 DOM 控制条输入框
             _syncPoseToDOM(ap, ml, dv, rotation, pitch);
 
             return JSON.stringify({ ok: true, ap: ap, ml: ml, dv: dv, rotation: rotation, pitch: pitch });
@@ -739,13 +956,32 @@
             var bregma = _markerSpheres[0].position;
             var pos = _needleGroup.position;
 
-            // 世界坐标反算为立体定位坐标（用真实 mm→世界米 系数）
-            var ap = (bregma.z - pos.z) / _mmToWorldScale;
-            var ml = (pos.x - bregma.x) / _mmToWorldScale;
-            var dv = (bregma.y - pos.y) / _mmToWorldScale;
+            // 世界坐标 → 立体定位坐标：用点积投影到三个解剖轴上
+            var dx = pos.x - bregma.x;
+            var dy = pos.y - bregma.y;
+            var dz = pos.z - bregma.z;
+            var S = _mmToWorldScale;
 
-            var rotation = THREE.MathUtils.radToDeg(_needleGroup.rotation.y);
-            var pitch = THREE.MathUtils.radToDeg(_needleGroup.rotation.x);
+            var ap = (dx * _apDir.x + dy * _apDir.y + dz * _apDir.z) / S;
+            var ml = (dx * _mlDir.x + dy * _mlDir.y + dz * _mlDir.z) / S;
+            var dv = (dx * _dvDir.x + dy * _dvDir.y + dz * _dvDir.z) / S;
+
+            // 从 world quaternion 反算 rotation 和 pitch
+            var q = _needleGroup.quaternion;
+            var dvVec = _dvDir.clone();
+            var needleUp = new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize();
+            var pitch = THREE.MathUtils.radToDeg(Math.acos(needleUp.dot(dvVec)));
+
+            var rotation = 0;
+            var dotAp = Math.abs(needleUp.dot(_apDir));
+            if (dotAp > 0.001) {
+                // 针上方向在 AP 方向的投影，估算 rotation
+                var projOnAPML = needleUp.clone().addScaledVector(dvVec, -needleUp.dot(dvVec)).normalize();
+                rotation = THREE.MathUtils.radToDeg(Math.atan2(
+                    projOnAPML.dot(_mlDir),
+                    projOnAPML.dot(_apDir)
+                ));
+            }
 
             return JSON.stringify({
                 ap: parseFloat(ap.toFixed(3)),
@@ -862,7 +1098,7 @@
             for (var pp = 0; pp < vertexMap.length; pp++) {
                 var nv = vertexMap[pp];
                 if (nv >= 0) {
-                    newPos[nv * 3]     = oldPos[pp * 3];
+                    newPos[nv * 3] = oldPos[pp * 3];
                     newPos[nv * 3 + 1] = oldPos[pp * 3 + 1];
                     newPos[nv * 3 + 2] = oldPos[pp * 3 + 2];
                 }
@@ -874,7 +1110,7 @@
                 for (var qq = 0; qq < vertexMap.length; qq++) {
                     var nv2 = vertexMap[qq];
                     if (nv2 >= 0) {
-                        newNorm[nv2 * 3]     = oldNorm[qq * 3];
+                        newNorm[nv2 * 3] = oldNorm[qq * 3];
                         newNorm[nv2 * 3 + 1] = oldNorm[qq * 3 + 1];
                         newNorm[nv2 * 3 + 2] = oldNorm[qq * 3 + 2];
                     }
@@ -921,9 +1157,9 @@
 
         // 将位姿值写回 DOM 输入框（使用缓存引用）
         function _syncPoseToDOM(ap, ml, dv, rotation, pitch) {
-            if (_elAp)  _elAp.value  = ap.toFixed(3);
-            if (_elMl)  _elMl.value  = ml.toFixed(3);
-            if (_elDv)  _elDv.value  = dv.toFixed(3);
+            if (_elAp) _elAp.value = ap.toFixed(3);
+            if (_elMl) _elMl.value = ml.toFixed(3);
+            if (_elDv) _elDv.value = dv.toFixed(3);
             if (_elRot) _elRot.value = rotation.toFixed(3);
             if (_elPit) _elPit.value = pitch.toFixed(3);
         }
@@ -996,9 +1232,9 @@
         // 模型加载完成后初始化控制面板事件
         function _initPoseBar() {
             // 缓存 DOM 元素
-            _elAp  = document.getElementById('pose-ap');
-            _elMl  = document.getElementById('pose-ml');
-            _elDv  = document.getElementById('pose-dv');
+            _elAp = document.getElementById('pose-ap');
+            _elMl = document.getElementById('pose-ml');
+            _elDv = document.getElementById('pose-dv');
             _elRot = document.getElementById('pose-rot');
             _elPit = document.getElementById('pose-pitch');
 
@@ -1054,11 +1290,14 @@
                     e.preventDefault();
                     if (_axisGroup) {
                         _axisGroup.visible = !_axisGroup.visible;
-                        // 同步控制 5 个标记红球
+                        // 同步控制标记球和光环
                         for (var k = 0; k < _markerSpheres.length; k++) {
                             _markerSpheres[k].visible = _axisGroup.visible;
                         }
-                        axesToggleBtn.textContent = (_axisGroup.visible ? '+ ' : '- ') + '坐标轴/栅格';
+                        for (var r = 0; r < _markerRings.length; r++) {
+                            _markerRings[r].visible = _axisGroup.visible;
+                        }
+                        axesToggleBtn.textContent = (_axisGroup.visible ? '+ ' : '- ') + '坐标轴/栅格/标记';
                         axesToggleBtn.style.background = _axisGroup.visible ? '#3A3A50' : '#5A3030';
                     }
                 });
@@ -1092,6 +1331,19 @@
             console.log('控制面板已初始化');
         }
 
+        // 颅骨透明度滑块事件（独立于 _initPoseBar，面板未初始化时也能工作）
+        (function () {
+            var opacitySlider = document.getElementById('opacity-slider');
+            if (opacitySlider) {
+                opacitySlider.addEventListener('input', function () {
+                    var val = parseInt(this.value) / 100.0;
+                    var label = document.getElementById('opacity-value');
+                    if (label) label.textContent = val.toFixed(2);
+                    window.setSkullOpacity(val);
+                });
+            }
+        })();
+
         // _initPoseBar 在 GLB 加载回调末尾调用
 
         // ===================== 8C. 内部辅助函数 =====================
@@ -1123,22 +1375,67 @@
             for (var i = 0; i < _markerNodes.length; i++) {
                 var worldPos = new THREE.Vector3();
                 _markerNodes[i].getWorldPosition(worldPos);
-                _markerSpheres[i].position.copy(worldPos);
+                var yOff = 0.008;  // 【可调参数】与 markerYOffset 保持一致
+                _markerSpheres[i].position.set(worldPos.x, worldPos.y + yOff, worldPos.z);
+                // 同步更新光环位置
+                if (i < _markerRings.length) {
+                    _markerRings[i].position.set(worldPos.x, worldPos.y + yOff, worldPos.z);
+                }
             }
             // 同步更新 mm→世界米 换算系数
             if (_markerSpheres.length >= 2) {
                 var worldDist = _markerSpheres[0].position.distanceTo(_markerSpheres[1].position);
                 _mmToWorldScale = worldDist / 4.21;
             }
-            // 同步更新脑立体坐标系：原点跟随 Bregma，尺寸跟随换算系数变化
+            // 同步更新脑立体坐标系：原点跟随 Bregma，方向跟随新的解剖轴
             if (_axisGroup && _markerSpheres.length > 0) {
+                _computeAnatomicalAxes();
                 _axisGroup.position.copy(_markerSpheres[0].position);
                 _axisGroup.scale.setScalar(_mmToWorldScale / _axisBaseScale);
             }
         }
 
-        // 创建脑立体定位坐标系 + 栅格
-        // 所有尺寸用脑空间 mm 定义，通过 _mmToWorldScale 转为世界米
+        // 从标记点实际世界坐标动态计算三个正交解剖轴方向
+        // _apDir: 前方（从 Lambda 指向 Bregma，即 AP 增加方向）
+        // _mlDir: 右侧（从 MidLeft 指向 MidRight）
+        // _dvDir: 腹侧 = cross(_apDir, _mlDir)
+        // 需要至少 4 个标记点（Bregma, Lambda, MidLeft, MidRight）
+        function _computeAnatomicalAxes() {
+            if (_markerSpheres.length < 5) {
+                // 标记点不足，回退到默认方向
+                _apDir.set(0, 0, -1);
+                _mlDir.set(1, 0, 0);
+                _dvDir.set(0, -1, 0);
+                console.log('解剖轴: 标记点不足，使用默认硬编码方向');
+                return;
+            }
+
+            var bregma = _markerSpheres[0].position;    // 索引 0: Bregma
+            var lambda = _markerSpheres[1].position;    // 索引 1: Lambda
+            var midLeft = _markerSpheres[3].position;   // 索引 3: MidLeft
+            var midRight = _markerSpheres[4].position;  // 索引 4: MidRight
+
+            // AP 方向：从 Lambda 指向 Bregma（前方 = AP+）
+            _apDir.copy(bregma).sub(lambda).normalize();
+
+            // ML 方向：从 MidLeft 指向 MidRight（右侧 = ML+）
+            _mlDir.copy(midRight).sub(midLeft).normalize();
+
+            // DV 方向：cross(AP, ML) = 腹侧（深入脑内 = DV+）
+            _dvDir.copy(_apDir).cross(_mlDir).normalize();
+
+            // 确保 DV 方向与 AP-ML 平面严格正交
+            // 重新计算 ML = cross(DV, AP)，使三个轴标准正交
+            _mlDir.copy(_dvDir).cross(_apDir).normalize();
+
+            console.log('解剖轴: AP=(' + _apDir.x.toFixed(4) + ', ' + _apDir.y.toFixed(4) + ', ' + _apDir.z.toFixed(4) + ')'
+                + ' ML=(' + _mlDir.x.toFixed(4) + ', ' + _mlDir.y.toFixed(4) + ', ' + _mlDir.z.toFixed(4) + ')'
+                + ' DV=(' + _dvDir.x.toFixed(4) + ', ' + _dvDir.y.toFixed(4) + ', ' + _dvDir.z.toFixed(4) + ')');
+        }
+
+        // 创建脑立体定位坐标系：刻度轴 + 平面栅格
+        // 轴杆：CylinderGeometry + ConeGeometry + 刻度齿
+        // 栅格：AP-ML 平面双级别线
         function _createStereotaxicAxes() {
             var group = new THREE.Group();
             group.name = 'StereotaxicAxes';
@@ -1146,108 +1443,150 @@
             _axisBaseScale = _mmToWorldScale;
             var W = function (mm) { return mm * _mmToWorldScale; };
 
-            var headH = W(0.6);  // 箭头高
-            var headR = W(0.3);  // 箭头半径
+            function _makeAxisMat(colorHex) {
+                return new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.35, metalness: 0.1 });
+            }
 
-            // AP 轴 — 前方(-Z) — 绿色，长 5mm
-            group.add(new THREE.ArrowHelper(
-                new THREE.Vector3(0, 0, -1), new THREE.Vector3(), W(5), 0x00CC66, headH, headR));
-            // ML 轴 — 右侧(+X) — 红色，长 5mm
-            group.add(new THREE.ArrowHelper(
-                new THREE.Vector3(1, 0, 0), new THREE.Vector3(), W(5), 0xFF3333, headH, headR));
-            // DV 轴 — 腹侧(-Y) — 蓝色，长 4mm
-            group.add(new THREE.ArrowHelper(
-                new THREE.Vector3(0, -1, 0), new THREE.Vector3(), W(4), 0x3388FF, headH, headR));
+            // 创建单条轴：轴杆 + 箭头 + 刻度齿
+            function _makeAxis(dir, lenMM, colorHex, headHMM, headRMM) {
+                var sub = new THREE.Group();
+                var headH = W(headHMM);
+                var headR = W(headRMM);
+                var shaftLen = W(lenMM) - headH;
+                var shaftR = headR * 0.4;
+                var mat = _makeAxisMat(colorHex);
 
-            // ---- AP-ML 平面栅格 (XZ 平面, ±10mm, 步距 1mm) ----
-            var gridSpan = W(10);
-            var gridStep = W(1);
+                // 圆柱轴杆
+                var shaftGeom = new THREE.CylinderGeometry(shaftR, shaftR, shaftLen, 10);
+                shaftGeom.translate(0, shaftLen / 2, 0);
+                sub.add(new THREE.Mesh(shaftGeom, mat));
+
+                // 圆锥箭头
+                var headGeom = new THREE.ConeGeometry(headR, headH, 12);
+                headGeom.translate(0, shaftLen + headH / 2, 0);
+                sub.add(new THREE.Mesh(headGeom, mat));
+
+                // ---- 刻度齿 ----
+                // 【可调参数】tickMajorHalf → 5mm齿半长(mm), tickMinorHalf → 1mm齿半长(mm)
+                var tickMajorHalf = 0.3, tickMinorHalf = 0.15;
+                var tickCount = Math.floor(lenMM);
+                var tickMat = new THREE.LineBasicMaterial({ color: colorHex, depthTest: true });
+
+                for (var t = 0; t <= tickCount; t++) {
+                    var yPos = W(t);
+                    var isMajor = (t % 5 === 0);
+                    var halfLen = isMajor ? W(tickMajorHalf) : W(tickMinorHalf);
+                    var tickGeom = new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(-halfLen, yPos, 0),
+                        new THREE.Vector3(+halfLen, yPos, 0)
+                    ]);
+                    sub.add(new THREE.Line(tickGeom, tickMat));
+                }
+
+                // 旋转：从 +Y 转到目标方向
+                var quat = new THREE.Quaternion().setFromUnitVectors(
+                    new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+                sub.setRotationFromQuaternion(quat);
+
+                return sub;
+            }
+
+            // 三轴：AP(绿) ML(红) DV(蓝)
+            // 【可调参数】axisLen → 轴总长(mm), headH → 箭头高(mm), headR → 箭头半径(mm)
+            var axisLenAP = 1, headH_AP = 0.4, headR_AP = 0.2;
+            var axisLenML = 1, headH_ML = 0.4, headR_ML = 0.2;
+            var axisLenDV = 1, headH_DV = 0.35, headR_DV = 0.18;
+            group.add(_makeAxis(new THREE.Vector3(0, 0, -1), axisLenAP, 0x00CC66, headH_AP, headR_AP));
+            group.add(_makeAxis(new THREE.Vector3(1, 0, 0), axisLenML, 0xFF3333, headH_ML, headR_ML));
+            group.add(_makeAxis(new THREE.Vector3(0, -1, 0), axisLenDV, 0x3388FF, headH_DV, headR_DV));
+
+            // ---- AP-ML 平面栅格 (XZ 平面) ----
+            // 【可调参数】gridSpanMM → 栅格半宽(mm), gridStepMM → 线间距(mm)
+            //            majorOpacity → 5mm线深浅, minorOpacity → 1mm线深浅
+            var gridSpanMM = 7, gridStepMM = 1;
+            var majorOpacity = 0.7, minorOpacity = 0.4;
+            var gridSpan = W(gridSpanMM);
+            var gridStep = W(gridStepMM);
             var steps = Math.round(gridSpan / gridStep);
-            var matML = new THREE.LineBasicMaterial({ color: 0xFF6666, transparent: true, opacity: 0.35, depthTest: true });
-            var matAP = new THREE.LineBasicMaterial({ color: 0x66CC88, transparent: true, opacity: 0.35, depthTest: true });
+            // 5mm 整刻度：黑实线；其余：淡灰细线
+            var matMajor = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: majorOpacity, depthTest: true });
+            var matMinor = new THREE.LineBasicMaterial({ color: 0x444444, transparent: true, opacity: minorOpacity, depthTest: true });
 
             for (var s = -steps; s <= steps; s++) {
                 var offset = s * gridStep;
-                // ML 方向线（沿 X，不同 Z）— 红
+                var isMajor = (s % 5 === 0);
+                var mat = isMajor ? matMajor : matMinor;
+                // ML 方向线（沿 X，不同 Z）
                 group.add(new THREE.Line(
                     new THREE.BufferGeometry().setFromPoints([
-                        new THREE.Vector3(-gridSpan, 0, offset), new THREE.Vector3(gridSpan, 0, offset)]), matML));
-                // AP 方向线（沿 Z，不同 X）— 绿
+                        new THREE.Vector3(-gridSpan, 0, offset), new THREE.Vector3(gridSpan, 0, offset)]), mat));
+                // AP 方向线（沿 Z，不同 X）
                 group.add(new THREE.Line(
                     new THREE.BufferGeometry().setFromPoints([
-                        new THREE.Vector3(offset, 0, -gridSpan), new THREE.Vector3(offset, 0, gridSpan)]), matAP));
+                        new THREE.Vector3(offset, 0, -gridSpan), new THREE.Vector3(offset, 0, gridSpan)]), mat));
             }
 
             if (_markerSpheres.length > 0) {
                 group.position.copy(_markerSpheres[0].position);
             }
 
-            console.log('坐标系+栅格: 轴5/5/4mm, 栅格±10mm/1mm步, W=' + _mmToWorldScale.toFixed(6));
+            console.log('坐标系: 刻度轴2/2/2mm, 栅格±10mm(5mm深/1mm浅), W=' + _mmToWorldScale.toFixed(6));
             return group;
         }
 
         // 创建定位针 3D 模型，返回 Group（尖端在 Group 原点）
-        // 结构：金色圆锥针尖 + 同色圆柱针杆，两段同色无缝拼接
+        // 结构：金色圆锥针尖 + 同色圆柱针杆 + 红色虚线轴线
         //
-        // 【调参指南 — 所有尺寸单位均为 mm】
-        //   针尖粗细 → ConeGeometry / CylinderGeometry 半径
-        //   针尖长短 → ConeGeometry 高度
-        //   针杆长短 → CylinderGeometry 高度
-        //   颜色     → mat.color
-        //   表面光滑度 → roughness（0=镜面, 1=磨砂）
-        //   金属质感  → metalness（0=塑料, 1=金属）
+        // 【可调参数 — 定位针尺寸，单位：世界米】
+        //   NEEDLE_CONE_R   → 锥尖底部半径
+        //   NEEDLE_CONE_H   → 锥尖高度
+        //   NEEDLE_SHAFT_H  → 针杆高度
+        //   NEEDLE_DASH_LEN → 虚线下延长度
         function _createNeedleModel() {
             var group = new THREE.Group();
             group.name = 'NeedleElectrode';
 
-            // 共享材质：金色，圆锥和圆柱颜色一致
+            var NEEDLE_CONE_R = 0.004;   // 锥尖半径（细针）
+            var NEEDLE_CONE_H = 0.10;    // 锥尖高
+            var NEEDLE_SHAFT_H = 0.05;   // 针杆高
+            var NEEDLE_DASH_LEN = 0.07;  // 虚线长度
+
+            // 共享材质：金色
             var mat = new THREE.MeshStandardMaterial({
-                color: 0xffaa00,             // 金色
-                roughness: 0.2,              // 较光滑，反光明显
-                metalness: 0.6,              // 半金属质感
-                emissive: 0x331100,          // 暗红色自发光
+                color: 0xffaa00,
+                roughness: 0.2,
+                metalness: 0.6,
+                emissive: 0x331100,
                 emissiveIntensity: 0.3
             });
 
             // ===== 针尖：圆锥 =====
-            // ConeGeometry(底部半径_mm, 高度_mm, 圆周分段数)
-            //   参数1: 6     = 底部半径 6mm
-            //   参数2: 300   = 高度 300mm (锥底在 Y=300mm)
-            //   参数3: 8     = 8 边
-            var coneH = 0.3;                    // 圆锥高度 (m)
-            var tipGeom = new THREE.ConeGeometry(0.006, coneH, 8);
-            tipGeom.rotateX(Math.PI);           // 翻转 180°，尖端朝下
-            tipGeom.translate(0, coneH / 2, 0); // Y 轴上移 halfHeight，尖端对齐 Group 原点 Y=0
+            var tipGeom = new THREE.ConeGeometry(NEEDLE_CONE_R, NEEDLE_CONE_H, 8);
+            tipGeom.rotateX(Math.PI);
+            tipGeom.translate(0, NEEDLE_CONE_H / 2, 0);
             var tipMesh = new THREE.Mesh(tipGeom, mat);
             tipMesh.castShadow = true;
             group.add(tipMesh);
 
             // ===== 针杆：圆柱 =====
-            // CylinderGeometry(上半径_mm, 下半径_mm, 高度_mm, 圆周分段数)
-            //   参数1: 6     = 顶部半径 6mm（与锥底一致）
-            //   参数2: 6     = 底部半径 6mm（与锥底一致）
-            //   参数3: 200   = 高度 200mm
-            //   参数4: 8     = 8 边
-            // 锥底在 Y=coneH，圆柱从 Y=coneH 延伸到 Y=coneH+shaftH
-            var shaftH = 0.2;                                    // 圆柱高度 (m)
-            var shaftGeom = new THREE.CylinderGeometry(0.006, 0.006, shaftH, 8);
-            shaftGeom.translate(0, coneH + shaftH / 2, 0);       // 中心在 coneH + shaftH/2
+            var shaftGeom = new THREE.CylinderGeometry(NEEDLE_CONE_R, NEEDLE_CONE_R, NEEDLE_SHAFT_H, 8);
+            shaftGeom.translate(0, NEEDLE_CONE_H + NEEDLE_SHAFT_H / 2, 0);
             var shaftMesh = new THREE.Mesh(shaftGeom, mat);
             shaftMesh.castShadow = true;
             group.add(shaftMesh);
 
-            // ===== 红色虚线轴线：从针尖向下延伸 =====
+            // ===== 红色虚线轴线 =====
             var dashGeom = new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(0, 0, 0),      // 针尖 (Group 原点)
-                new THREE.Vector3(0, -0.2, 0)    // 向下 200mm
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, -NEEDLE_DASH_LEN, 0)
             ]);
             var dashMat = new THREE.LineDashedMaterial({
-                color: 0xFF3333,                  // 醒目的红色
-                dashSize: 0.012,                  // 实线段长
-                gapSize: 0.006                    // 虚空间隔
+                color: 0xFF3333,
+                dashSize: 0.008,
+                gapSize: 0.004
             });
             var dashLine = new THREE.Line(dashGeom, dashMat);
-            dashLine.computeLineDistances();       // 虚线必须调用
+            dashLine.computeLineDistances();
             group.add(dashLine);
 
             return group;
