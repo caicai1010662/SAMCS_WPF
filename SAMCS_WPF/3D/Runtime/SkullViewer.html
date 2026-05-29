@@ -34,44 +34,52 @@
             display: block;
         }
 
-        /* ---------- 左上角折叠控制面板 ---------- */
-        #ctrl-panel {
+        /* ---------- 左上角双面板 ---------- */
+        #top-left-panels {
             position: absolute;
             top: 8px;
             left: 8px;
             z-index: 10;
+            display: flex;
+            gap: 6px;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        #ctrl-toggle {
-            height: 28px;
+        .tl-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tl-toggle {
+            height: 26px;
             padding: 0 10px;
-            background: rgba(30, 30, 46, 0.85);
+            background: rgba(30, 30, 46, 0.88);
             color: #CCCCCC;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            font-size: 11px;
+            font-family: 'Microsoft YaHei', sans-serif;
             white-space: nowrap;
         }
 
-        #ctrl-toggle:hover {
-            background: rgba(50, 50, 70, 0.9);
+        .tl-toggle:hover {
+            background: rgba(50, 50, 70, 0.92);
             color: #FFFFFF;
         }
 
-        #ctrl-body {
+        .tl-body {
             display: none;
             margin-top: 4px;
-            padding: 10px;
-            background: rgba(30, 30, 46, 0.88);
+            padding: 8px 10px;
+            background: rgba(30, 30, 46, 0.90);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 6px;
-            min-width: 320px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
-        #ctrl-body.open {
+        .tl-body.open {
             display: block;
         }
 
@@ -89,7 +97,7 @@
         .pose-label {
             color: #8899AA;
             font-size: 11px;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            font-family: 'Microsoft YaHei', sans-serif;
             width: 24px;
             text-align: right;
         }
@@ -157,7 +165,7 @@
             border-radius: 3px;
             cursor: pointer;
             font-size: 11px;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            font-family: 'Microsoft YaHei', sans-serif;
         }
 
         #pose-apply:hover {
@@ -168,42 +176,29 @@
             background: #2A5BC0;
         }
 
-        #pose-toggle-axes {
-            height: 24px;
-            padding: 0 8px;
-            background: #3A3A50;
-            color: #CCCCCC;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-            white-space: nowrap;
-        }
-
-        #pose-toggle-axes:hover {
-            background: #4A4A60;
-        }
-
-        /* ---------- 底部图例 ---------- */
-        #legend-bar {
+        /* ---------- 底部图例（纵向排列） ---------- */
+        #legend-container {
             position: absolute;
             bottom: 6px;
             left: 6px;
             z-index: 10;
             display: flex;
-            align-items: stretch;
-            gap: 18px;
-            padding: 6px 16px;
-            background: rgba(20, 20, 35, 0.88);
-            border-radius: 6px;
+            flex-direction: column;
+            gap: 5px;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        .legend-col {
+        .legend-box {
             display: flex;
             flex-direction: column;
             gap: 3px;
+            padding: 5px 12px;
+            /* 【可调参数】图例框统一宽度 */
+            width: 75px;
+            background: rgba(20, 20, 35, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
         }
 
         .legend-item {
@@ -211,7 +206,7 @@
             align-items: center;
             gap: 5px;
             font-size: 10px;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            font-family: 'Microsoft YaHei', sans-serif;
             color: #BBBBCC;
             height: 16px;
             line-height: 16px;
@@ -224,147 +219,182 @@
             flex-shrink: 0;
         }
 
-        .legend-divider {
-            width: 1px;
-            background: #3A3A4A;
-            border-radius: 0;
-            align-self: stretch;
-        }
-
         .legend-axis-arrow {
             flex-shrink: 0;
         }
 
-        /* ---------- 右下角透明度控件 ---------- */
-        #opacity-ctrl {
-            position: absolute;
-            bottom: 6px;
-            right: 6px;
-            z-index: 10;
+        /* ---------- 面板内复用样式 ---------- */
+        .toggle-row {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 10px;
-            background: rgba(20, 20, 35, 0.88);
-            border-radius: 6px;
-            user-select: none;
-            -webkit-user-select: none;
+            margin-bottom: 2px;
+            height: 20px;
         }
 
-        #opacity-ctrl label {
-            color: #8899AA;
-            font-size: 10px;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        .toggle-row label {
+            color: #BBBBCC;
+            font-size: 11px;
+            font-family: 'Microsoft YaHei', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        #opacity-slider {
-            width: 72px;
-            height: 4px;
-            accent-color: #8899AA;
+        .toggle-row input[type="checkbox"] {
+            accent-color: #00CC66;
             cursor: pointer;
         }
 
-        #opacity-value {
-            width: 30px;
-            text-align: right;
-            color: #CCCCCC;
-            font-size: 10px;
+        .panel-sep {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin: 6px 0;
+        }
+
+        .sc-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 3px;
+        }
+
+        .slider-label {
+            color: #8899AA;
+            font-size: 11px;
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin-bottom: 2px;
+        }
+
+        .sc-row input[type="range"] {
+            width: 72px;
+            height: 3px;
+            accent-color: #00CC66;
+            cursor: pointer;
+        }
+
+        .sc-val {
+            min-width: 34px;
+            text-align: center;
+            color: #E0E0E0;
+            font-size: 11px;
             font-family: 'Consolas', monospace;
+            padding: 1px 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 3px;
         }
     </style>
 </head>
 
 <body>
     <div id="viewport">
-        <!--  左上角折叠控制面板  -->
-        <div id="ctrl-panel">
-            <button id="ctrl-toggle">+ 坐标与控制</button>
-            <div id="ctrl-body">
-                <!--  坐标轴/栅格  -->
-                <div class="ctrl-row">
-                    <button id="pose-toggle-axes">+ 坐标轴/栅格</button>
-                </div>
-                <!--  AP  -->
-                <div class="ctrl-row">
-                    <span class="pose-label">AP</span>
-                    <input class="pose-input" id="pose-ap" type="text" value="0.000" />
-                    <div class="pose-step-wrap">
-                        <button class="pose-step-btn" data-param="ap" data-delta="0.001">▲</button>
-                        <button class="pose-step-btn" data-param="ap" data-delta="-0.001">▼</button>
+        <!--  左上角双面板  -->
+        <div id="top-left-panels">
+            <!--  面板一：显示与调节  -->
+            <div class="tl-panel">
+                <button class="tl-toggle" data-target="disp-body">+ 显示与调节</button>
+                <div class="tl-body" id="disp-body">
+                    <div class="toggle-row">
+                        <label><input type="checkbox" id="chk-markers" checked style="accent-color:#00CC66;" />
+                            五点标记</label>
                     </div>
-                    <span class="ctrl-unit">mm</span>
-                </div>
-                <!--  ML  -->
-                <div class="ctrl-row">
-                    <span class="pose-label">ML</span>
-                    <input class="pose-input" id="pose-ml" type="text" value="0.000" />
-                    <div class="pose-step-wrap">
-                        <button class="pose-step-btn" data-param="ml" data-delta="0.001">▲</button>
-                        <button class="pose-step-btn" data-param="ml" data-delta="-0.001">▼</button>
+                    <div class="toggle-row">
+                        <label><input type="checkbox" id="chk-axes" checked style="accent-color:#00CC66;" />
+                            AP/ML/DV轴</label>
                     </div>
-                    <span class="ctrl-unit">mm</span>
-                </div>
-                <!--  DV  -->
-                <div class="ctrl-row">
-                    <span class="pose-label">DV</span>
-                    <input class="pose-input" id="pose-dv" type="text" value="0.000" />
-                    <div class="pose-step-wrap">
-                        <button class="pose-step-btn" data-param="dv" data-delta="0.001">▲</button>
-                        <button class="pose-step-btn" data-param="dv" data-delta="-0.001">▼</button>
+                    <div class="toggle-row">
+                        <label><input type="checkbox" id="chk-grid" checked style="accent-color:#00CC66;" /> 栅格</label>
                     </div>
-                    <span class="ctrl-unit">mm</span>
-                </div>
-                <!--  Rot  -->
-                <div class="ctrl-row">
-                    <span class="pose-label">Rot</span>
-                    <input class="pose-input" id="pose-rot" type="text" value="0.0" style="width:48px" />
-                    <div class="pose-step-wrap">
-                        <button class="pose-step-btn" data-param="rot" data-delta="1.0">▲</button>
-                        <button class="pose-step-btn" data-param="rot" data-delta="-1.0">▼</button>
+                    <hr class="panel-sep" />
+                    <div class="slider-label">透明度</div>
+                    <div class="sc-row">
+                        <input type="range" id="opacity-slider" min="10" max="100" value="100" />
+                        <span class="sc-val" id="opacity-value">1.00</span>
                     </div>
-                    <span class="ctrl-unit">°</span>
-                </div>
-                <!--  Pitch  -->
-                <div class="ctrl-row">
-                    <span class="pose-label">Pit</span>
-                    <input class="pose-input" id="pose-pitch" type="text" value="0.0" style="width:48px" />
-                    <div class="pose-step-wrap">
-                        <button class="pose-step-btn" data-param="pitch" data-delta="1.0">▲</button>
-                        <button class="pose-step-btn" data-param="pitch" data-delta="-1.0">▼</button>
+                    <div class="slider-label">B-L (mm)</div>
+                    <div class="sc-row">
+                        <input type="range" id="bl-slider" min="3.0" max="6.0" step="0.01" value="4.1" />
+                        <span class="sc-val" id="bl-value">4.10</span>
                     </div>
-                    <span class="ctrl-unit">°</span>
+                    <hr class="panel-sep" />
+                    <div class="ctrl-row">
+                        <button id="btn-craniotomy"
+                            style="height:28px;padding:0 12px;background:#8B3A3A;color:#FFF;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-family:'Microsoft YaHei',sans-serif;">颅骨开窗</button>
+                    </div>
+                    <div class="ctrl-row">
+                        <button id="btn-refresh"
+                            style="height:28px;padding:0 12px;background:#3A3A50;color:#CCC;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-family:'Microsoft YaHei',sans-serif;">刷新页面</button>
+                    </div>
                 </div>
-                <!--  应用  -->
-                <div class="ctrl-row">
-                    <span class="pose-label"></span>
-                    <button id="pose-apply">应用</button>
-                </div>
-                <!--  颅骨切除 + 刷新  -->
-                <div class="ctrl-row">
-                    <span class="pose-label"></span>
-                    <button id="btn-craniotomy"
-                        style="height:28px;padding:0 12px;background:#8B3A3A;color:#FFF;border:none;border-radius:3px;cursor:pointer;font-size:11px;">颅骨切除
-                        1.5mm</button>
-                    <button id="btn-refresh"
-                        style="height:28px;padding:0 12px;background:#3A3A50;color:#CCC;border:none;border-radius:3px;cursor:pointer;font-size:11px;">刷新</button>
+            </div>
+            <!--  面板二：位姿控制  -->
+            <div class="tl-panel">
+                <button class="tl-toggle" data-target="pose-body">+ 位姿控制</button>
+                <div class="tl-body" id="pose-body">
+                    <div class="ctrl-row">
+                        <span class="pose-label">AP</span>
+                        <input class="pose-input" id="pose-ap" type="text" value="0.000" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="ap" data-delta="0.001">▲</button>
+                            <button class="pose-step-btn" data-param="ap" data-delta="-0.001">▼</button>
+                        </div>
+                        <span class="ctrl-unit">mm</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <span class="pose-label">ML</span>
+                        <input class="pose-input" id="pose-ml" type="text" value="0.000" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="ml" data-delta="0.001">▲</button>
+                            <button class="pose-step-btn" data-param="ml" data-delta="-0.001">▼</button>
+                        </div>
+                        <span class="ctrl-unit">mm</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <span class="pose-label">DV</span>
+                        <input class="pose-input" id="pose-dv" type="text" value="0.000" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="dv" data-delta="0.001">▲</button>
+                            <button class="pose-step-btn" data-param="dv" data-delta="-0.001">▼</button>
+                        </div>
+                        <span class="ctrl-unit">mm</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <span class="pose-label">Rot</span>
+                        <input class="pose-input" id="pose-rot" type="text" value="0.0" style="width:48px" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="rot" data-delta="1.0">▲</button>
+                            <button class="pose-step-btn" data-param="rot" data-delta="-1.0">▼</button>
+                        </div>
+                        <span class="ctrl-unit">°</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <span class="pose-label">Pit</span>
+                        <input class="pose-input" id="pose-pitch" type="text" value="0.0" style="width:48px" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="pitch" data-delta="1.0">▲</button>
+                            <button class="pose-step-btn" data-param="pitch" data-delta="-1.0">▼</button>
+                        </div>
+                        <span class="ctrl-unit">°</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <span class="pose-label"></span>
+                        <button id="pose-apply">应用</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!--  底部图例条  -->
-        <div id="legend-bar">
-            <!--  左列：五点标记  -->
-            <div class="legend-col">
+        <!--  底部图例（纵向排列）  -->
+        <div id="legend-container">
+            <div class="legend-box" id="legend-markers-box">
                 <div class="legend-item"><span class="legend-dot" style="background:#E91E63;"></span>Bregma</div>
                 <div class="legend-item"><span class="legend-dot" style="background:#00BCD4;"></span>Lambda</div>
                 <div class="legend-item"><span class="legend-dot" style="background:#FFC107;"></span>Midpoint</div>
                 <div class="legend-item"><span class="legend-dot" style="background:#4CAF50;"></span>MidLeft</div>
                 <div class="legend-item"><span class="legend-dot" style="background:#FF5722;"></span>MidRight</div>
             </div>
-            <!--  分隔线  -->
-            <span class="legend-divider"></span>
-            <!--  右列：坐标轴方向（双向彩色箭头）  -->
-            <div class="legend-col">
+            <div class="legend-box" id="legend-axes-box">
                 <div class="legend-item">
                     <svg class="legend-axis-arrow" width="28" height="12" viewBox="0 0 28 12">
                         <line x1="2" y1="6" x2="22" y2="6" stroke="#00CC66" stroke-width="1.8" />
@@ -389,12 +419,6 @@
             </div>
         </div>
 
-        <!--  右下角颅骨透明度控件  -->
-        <div id="opacity-ctrl">
-            <label>Opacity</label>
-            <input type="range" id="opacity-slider" min="10" max="100" value="100" />
-            <span id="opacity-value">1.00</span>
-        </div>
     </div>
 
     <script type="importmap">
@@ -413,7 +437,7 @@
         import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
         // ====== 可调参数汇总（按需搜索关键字跳转） ======
-        //   场景外观  → 搜索 "2. 渲染器" / "4. 布光" / "5. 圆形地面"
+        //   场景外观  → 搜索 "2. 渲染器" / "4. 布光" / "5. 立体底座"
         //   摄像机    → 搜索 "3. 摄像机"
         //   颅骨材质  → 搜索 "SKULL_COLOR"
         //   标记球    → 搜索 "markerConfigs"
@@ -454,8 +478,8 @@
         controls.minDistance = 2;
         controls.maxDistance = 3.2;
         controls.target.set(0, 0, 0);
-        controls.minPolarAngle = 0.1;
-        controls.maxPolarAngle = 0.7;
+        controls.minPolarAngle = 0.05;  // 避免完全俯视导致的 gimbal lock 和交互异常
+        controls.maxPolarAngle = 1.5; // 避免完全仰视导致的 gimbal lock 和交互异常
         controls.enabled = true;      // 允许鼠标交互
         controls.enablePan = false;   // 禁止拖动平移，仅允许旋转+缩放
         controls.update();
@@ -489,19 +513,21 @@
         keyLight.shadow.bias = -0.0003;
         scene.add(keyLight);
 
-        const rimLight = new THREE.DirectionalLight(0x8899cc, 1.0);
-        rimLight.position.set(-4, 3, -4);
-        scene.add(rimLight);
 
-        // ===================== 5. 圆形地面 =====================
-        const groundPlane = new THREE.Mesh(
-            new THREE.CircleGeometry(0.8, 48),
-            new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.85, metalness: 0.05 })
+        // ===================== 5. 立体底座 =====================
+        // 实心圆柱，阳极氧化铝质感
+        // 【可调参数】底座顶半径/底半径(m) / 高度(m) / 颜色
+        const BASE_R_TOP = 0.82, BASE_R_BOT = 0.86, BASE_H = 0.04, BASE_Y = -0.50;
+        const BASE_COLOR = 0x808080;
+
+        const pedestal = new THREE.Mesh(
+            new THREE.CylinderGeometry(BASE_R_TOP, BASE_R_BOT, BASE_H, 64),
+            new THREE.MeshStandardMaterial({ color: BASE_COLOR, roughness: 0.55, metalness: 0.35 })
         );
-        groundPlane.rotation.x = -Math.PI / 2;
-        groundPlane.position.y = -0.5;
-        groundPlane.receiveShadow = true;
-        scene.add(groundPlane);
+        pedestal.position.y = BASE_Y;
+        pedestal.receiveShadow = true;
+        pedestal.castShadow = true;
+        scene.add(pedestal);
 
         // ===================== 6. 控制台中继到 C# =====================
         // 劫持 console 方法，通过 postMessage 发送到 C# Debug 输出
@@ -542,9 +568,11 @@
         let _markerSpheres = [];
         let _markerRings = [];              // 标记点外围光环
         let _needleGroup = null;
-        let _axisGroup = null;              // 脑立体坐标系 (AP/ML/DV 三轴 + 栅格)
+        let _axesGroup = null;              // 坐标轴 (AP/ML/DV 三轴 + 刻度齿)
+        let _gridGroup = null;              // 栅格 (AP-ML 平面线)
         let _axisBaseScale = 1.0;           // 坐标系创建时的 _mmToWorldScale，供缩放用
-        let _mmToWorldScale = 0.001;        // mm→世界米 换算系数（加载后据 Bregma-Lambda 实测更新）
+        let _blDistance = 4.1;              // 当前 B-L 设定距离(mm)，随缩放变更
+        let _mmToWorldScale = 0.001;        // mm→世界米 换算系数（= B-L世界距 / _blDistance）
         let _cameraLockedToNeedle = false;  // 相机是否跟随针尖
         let _apDir = new THREE.Vector3();  // AP 轴方向（前），从标记点动态计算
         let _mlDir = new THREE.Vector3();  // ML 轴方向（右），从标记点动态计算
@@ -599,9 +627,10 @@
                 console.log('包围盒: 尺寸=(' + size.x.toFixed(3) + ', ' + size.y.toFixed(3) + ', ' + size.z.toFixed(3) + ')'
                     + ' 中心=(' + center.x.toFixed(3) + ', ' + center.y.toFixed(3) + ', ' + center.z.toFixed(3) + ')');
 
-                // 【可调参数】地面高度，必须和圆形地面的 position.y 保持一致
-                const GROUND_Y = -0.35;
+                // 【可调参数】地面高度，与底座台面 Y 保持一致
+                // const GROUND_Y = -0.48;  // 立体底座台面高度
 
+                const GROUND_Y = -0.3;  // 立体底座台面高度
                 // 自动缩放：以包围盒最大边为基准，等比缩放至目标尺寸
                 const maxDim = Math.max(size.x, size.y, size.z);
                 const scale = MODEL_TARGET_SIZE / maxDim;
@@ -711,9 +740,9 @@
                 // Bregma(索引0) 和 Lambda(索引1) 在 GLB 中相距 4.21mm
                 if (_markerSpheres.length >= 2) {
                     var worldDist = _markerSpheres[0].position.distanceTo(_markerSpheres[1].position);
-                    _mmToWorldScale = worldDist / 4.21;
-                    console.log('换算系数: 1mm = ' + _mmToWorldScale.toFixed(6) + ' 世界米 (Bregma-Lambda 世界距='
-                        + worldDist.toFixed(3) + 'm / 4.21mm)');
+                    _mmToWorldScale = worldDist / _blDistance;
+                    console.log('换算系数: 1mm = ' + _mmToWorldScale.toFixed(6) + ' 世界米 (B-L世界距='
+                        + worldDist.toFixed(3) + 'm / ' + _blDistance.toFixed(2) + 'mm)');
                 }
 
                 // 初始化 UI 控制（必须在创建坐标系之前，确保面板可用）
@@ -724,8 +753,10 @@
 
                 // 脑立体坐标系：以前囟为原点，三色轴标注 AP / ML / DV
                 try {
-                    _axisGroup = _createStereotaxicAxes();
-                    scene.add(_axisGroup);
+                    _axesGroup = _createAxesGroup();
+                    _gridGroup = _createGridGroup();
+                    scene.add(_axesGroup);
+                    scene.add(_gridGroup);
                 } catch (e) {
                     console.error('坐标系创建失败: ' + e.message);
                 }
@@ -785,68 +816,58 @@
         // ---------- 颅骨缩放 ----------
 
         // 根据实测 Bregma-Lambda 距离缩放颅骨模型
-        // realDistanceMM: 真实小鼠前后囟距离，单位毫米
+        // realDistanceMM: 真实小鼠前后囟距离，单位毫米（默认 4.21）
+        // 缩放逻辑：scaleFactor = realDistanceMM / 4.21 → _skullModel.scale = _initialScale * scaleFactor
+        // 坐标系、标记球、光环位置通过 _updateAllMarkerPositions 自动同步
         window.setBregmaLambdaDistance = (realDistanceMM) => {
             if (!_modelLoaded) {
                 return JSON.stringify({ ok: false, error: '模型尚未加载' });
             }
-            if (_markerSpheres.length < 2) {
-                return JSON.stringify({ ok: false, error: '未找到 Bregma/Lambda 标记点' });
-            }
 
-            // 用 Bregma (索引 0) 和 Lambda (索引 1) 的当前世界坐标算距离
-            var bregmaPos = _markerSpheres[0].position;
-            var lambdaPos = _markerSpheres[1].position;
-            var dx = lambdaPos.x - bregmaPos.x;
-            var dy = lambdaPos.y - bregmaPos.y;
-            var dz = lambdaPos.z - bregmaPos.z;
-            var currentDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            var targetDist = realDistanceMM / 1000.0;
+            _blDistance = realDistanceMM;      // 更新当前 B-L 设定
+            var ratio = realDistanceMM / 4.21;  // 以模型内置 4.21mm 为基准
+            var newScale = _initialScale * ratio;
+            _skullModel.scale.setScalar(newScale);
 
-            if (currentDist < 0.0001) {
-                return JSON.stringify({ ok: false, error: '当前 Bregma-Lambda 距离过小' });
-            }
-
-            var scaleFactor = targetDist / currentDist;
-            _skullModel.scale.multiplyScalar(scaleFactor);
-
-            // 缩放改变后，重新计算颅骨位置（贴地公式依赖 scale）
-            var newScale = _skullModel.scale.x;
-            var GROUND_Y = -0.25;
+            // 重新贴地（位置依赖 scale）
+            var GROUND_Y = -0.3;  // 立体底座台面高度，与初始加载保持一致
             _skullModel.position.set(
                 -newScale * _boxCenter.x,
                 GROUND_Y - newScale * _boxCenter.y + newScale * _boxSize.y / 2,
                 -newScale * _boxCenter.z
             );
 
-            // 更新 5 个标记球的世界位置
+            // 更新标记球、光环、坐标系原点、_mmToWorldScale
             _updateAllMarkerPositions();
 
-            console.log('颅骨缩放: 实测距离=' + realDistanceMM.toFixed(2) + 'mm, '
-                + '旧距离=' + (currentDist * 1000).toFixed(2) + 'mm, '
-                + '缩放因子=' + scaleFactor.toFixed(4));
+            // 同步更新 B-L 滑块显示
+            var blSlider = document.getElementById('bl-slider');
+            if (blSlider) {
+                blSlider.value = realDistanceMM;
+            }
+            var blLabel = document.getElementById('bl-value');
+            if (blLabel) {
+                blLabel.textContent = realDistanceMM.toFixed(2);
+            }
 
-            return JSON.stringify({
-                ok: true,
-                scaleFactor: scaleFactor,
-                oldDistMM: currentDist * 1000,
-                newDistMM: realDistanceMM
-            });
+            console.log('颅骨缩放: B-L=' + realDistanceMM.toFixed(2) + 'mm, ratio=' + ratio.toFixed(4) + ', scale=' + newScale.toFixed(4));
+            return JSON.stringify({ ok: true, scale: newScale, ratio: ratio });
         };
 
-        // 恢复颅骨到初始自动缩放比例
+        // 恢复颅骨到初始默认缩放比例（B-L = 4.1mm）
         window.resetSkullScale = () => {
             if (!_modelLoaded) {
+                console.warn('resetSkullScale: 模型尚未加载');
                 return JSON.stringify({ ok: false, error: '模型尚未加载' });
             }
 
-            // 先除以当前 scale，再乘回 _initialScale
-            var currentScale = _skullModel.scale.x;
-            var resetFactor = _initialScale / currentScale;
+            console.log('resetSkullScale: 开始重置, 当前scale=' + _skullModel.scale.x.toFixed(4) + ', B-L=' + _blDistance.toFixed(2));
+
+            _blDistance = 4.1;
             _skullModel.scale.setScalar(_initialScale);
 
             // 重新贴地
-            var GROUND_Y = -0.25;
+            var GROUND_Y = -0.3;  // 立体底座台面高度，与初始加载一致
             _skullModel.position.set(
                 -_initialScale * _boxCenter.x,
                 GROUND_Y - _initialScale * _boxCenter.y + _initialScale * _boxSize.y / 2,
@@ -855,8 +876,13 @@
 
             _updateAllMarkerPositions();
 
-            console.log('颅骨缩放已重置，恢复因子=' + resetFactor.toFixed(4));
+            // 同步 B-L 滑块
+            var blSlider = document.getElementById('bl-slider');
+            if (blSlider) blSlider.value = 4.1;
+            var blLabel = document.getElementById('bl-value');
+            if (blLabel) blLabel.textContent = '4.10';
 
+            console.log('resetSkullScale: 完成, scale=' + _initialScale.toFixed(4) + ', pos=(' + _skullModel.position.x.toFixed(3) + ',' + _skullModel.position.y.toFixed(3) + ',' + _skullModel.position.z.toFixed(3) + ')');
             return JSON.stringify({ ok: true, scale: _initialScale });
         };
 
@@ -994,7 +1020,7 @@
 
         // ---------- 颅骨切除 ----------
 
-        // 在针尖位置切除直径 1.5mm 的圆形缺口
+        // 在针尖位置切除直径 1.0mm 的圆形缺口
         window.craniotomyCut = () => {
             if (!_modelLoaded) {
                 return JSON.stringify({ ok: false, error: '模型尚未加载' });
@@ -1019,8 +1045,10 @@
             tipLocal.copy(_needleGroup.position);
             skullMesh.worldToLocal(tipLocal);
 
-            // 切除圆柱参数：半径 0.75mm，沿颅骨本地 Y 轴
-            var cutRadius = 0.75 * _mmToWorldScale / _skullModel.scale.x;
+            // 切除参数：半径 0.3mm，Y 轴高度限制（只切表层，不贯穿）
+            var cutRadius = 0.3 * _mmToWorldScale / _skullModel.scale.x;
+            // var cutHalfH = cutRadius * 0.5;  // Y 轴半高，限制切除深度
+            var cutHalfH = 0.4;  // Y 轴半高，限制切除深度
 
             console.log('颅骨切除: 针尖本地=(' + tipLocal.x.toFixed(4) + ', '
                 + tipLocal.y.toFixed(4) + ', ' + tipLocal.z.toFixed(4)
@@ -1043,9 +1071,9 @@
                 var i2 = oldIndex[t * 3 + 2];
 
                 // 检查三个顶点是否全在圆柱内
-                var in0 = _ptInCylinder(oldPos, i0, tipLocal, cutRadius);
-                var in1 = _ptInCylinder(oldPos, i1, tipLocal, cutRadius);
-                var in2 = _ptInCylinder(oldPos, i2, tipLocal, cutRadius);
+                var in0 = _ptInCylinder(oldPos, i0, tipLocal, cutRadius, cutHalfH);
+                var in1 = _ptInCylinder(oldPos, i1, tipLocal, cutRadius, cutHalfH);
+                var in2 = _ptInCylinder(oldPos, i2, tipLocal, cutRadius, cutHalfH);
 
                 if (in0 && in1 && in2) {
                     removedCount++;
@@ -1238,22 +1266,26 @@
             _elRot = document.getElementById('pose-rot');
             _elPit = document.getElementById('pose-pitch');
 
-            // 折叠/展开面板
-            var toggleBtn = document.getElementById('ctrl-toggle');
-            var body = document.getElementById('ctrl-body');
-            var open = false;
-            if (toggleBtn && body) {
-                toggleBtn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    open = !open;
-                    if (open) {
-                        body.classList.add('open');
-                        toggleBtn.textContent = '- 坐标与控制';
-                    } else {
-                        body.classList.remove('open');
-                        toggleBtn.textContent = '+ 坐标与控制';
-                    }
-                });
+            // 折叠/展开面板（通用 .tl-toggle + [data-target]）
+            var toggles = document.querySelectorAll('.tl-toggle');
+            for (var ti = 0; ti < toggles.length; ti++) {
+                (function (btn) {
+                    var targetId = btn.getAttribute('data-target');
+                    var body = document.getElementById(targetId);
+                    var label = btn.textContent.replace(/^[+-] /, '');
+                    if (!body) return;
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var isOpen = body.classList.contains('open');
+                        if (isOpen) {
+                            body.classList.remove('open');
+                            btn.textContent = '+ ' + label;
+                        } else {
+                            body.classList.add('open');
+                            btn.textContent = '- ' + label;
+                        }
+                    });
+                })(toggles[ti]);
             }
 
             // 步进按钮事件
@@ -1283,23 +1315,32 @@
                 });
             }
 
-            // 坐标轴/栅格切换按钮
-            var axesToggleBtn = document.getElementById('pose-toggle-axes');
-            if (axesToggleBtn) {
-                axesToggleBtn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    if (_axisGroup) {
-                        _axisGroup.visible = !_axisGroup.visible;
-                        // 同步控制标记球和光环
-                        for (var k = 0; k < _markerSpheres.length; k++) {
-                            _markerSpheres[k].visible = _axisGroup.visible;
-                        }
-                        for (var r = 0; r < _markerRings.length; r++) {
-                            _markerRings[r].visible = _axisGroup.visible;
-                        }
-                        axesToggleBtn.textContent = (_axisGroup.visible ? '+ ' : '- ') + '坐标轴/栅格/标记';
-                        axesToggleBtn.style.background = _axisGroup.visible ? '#3A3A50' : '#5A3030';
-                    }
+            // ---- 复选框：Markers（3D标记球+光环+图例五点列） ----
+            var chkMarkers = document.getElementById('chk-markers');
+            if (chkMarkers) {
+                chkMarkers.addEventListener('change', function () {
+                    var vis = this.checked;
+                    for (var k = 0; k < _markerSpheres.length; k++) _markerSpheres[k].visible = vis;
+                    for (var r = 0; r < _markerRings.length; r++) _markerRings[r].visible = vis;
+                    var box = document.getElementById('legend-markers-box');
+                    if (box) box.style.display = vis ? '' : 'none';
+                });
+            }
+            // ---- 复选框：Axes（3D坐标轴+图例轴列） ----
+            var chkAxes = document.getElementById('chk-axes');
+            if (chkAxes) {
+                chkAxes.addEventListener('change', function () {
+                    var vis = this.checked;
+                    if (_axesGroup) _axesGroup.visible = vis;
+                    var box = document.getElementById('legend-axes-box');
+                    if (box) box.style.display = vis ? '' : 'none';
+                });
+            }
+            // ---- 复选框：Grid（仅栅格，无图例） ----
+            var chkGrid = document.getElementById('chk-grid');
+            if (chkGrid) {
+                chkGrid.addEventListener('change', function () {
+                    if (_gridGroup) _gridGroup.visible = this.checked;
                 });
             }
 
@@ -1331,7 +1372,7 @@
             console.log('控制面板已初始化');
         }
 
-        // 颅骨透明度滑块事件（独立于 _initPoseBar，面板未初始化时也能工作）
+        // 颅骨透明度滑块事件（独立于 _initPoseBar）
         (function () {
             var opacitySlider = document.getElementById('opacity-slider');
             if (opacitySlider) {
@@ -1340,6 +1381,19 @@
                     var label = document.getElementById('opacity-value');
                     if (label) label.textContent = val.toFixed(2);
                     window.setSkullOpacity(val);
+                });
+            }
+        })();
+
+        // B-L 距离滑块事件（独立于 _initPoseBar）
+        (function () {
+            var blSlider = document.getElementById('bl-slider');
+            if (blSlider) {
+                blSlider.addEventListener('input', function () {
+                    var val = parseFloat(this.value);
+                    var label = document.getElementById('bl-value');
+                    if (label) label.textContent = val.toFixed(2);
+                    window.setBregmaLambdaDistance(val);
                 });
             }
         })();
@@ -1363,11 +1417,14 @@
             return found;
         }
 
-        // 判断顶点 (px,py,pz) 是否在以 (cx,cy,cz) 为中心、半径为 r 的圆柱内（沿 Y 轴）
-        function _ptInCylinder(posArr, i, center, radius) {
+        // 判断顶点 (px,py,pz) 是否在以 (cx,cy,cz) 为中心的扁圆柱内
+        // XZ 平面半径 r，Y 轴高度限制 halfH（只切表层，不贯穿颅骨）
+        function _ptInCylinder(posArr, i, center, radius, halfH) {
             var dx = posArr[i * 3] - center.x;
+            var dy = posArr[i * 3 + 1] - center.y;
             var dz = posArr[i * 3 + 2] - center.z;
-            return (dx * dx + dz * dz) <= (radius * radius);
+            return (dx * dx + dz * dz) <= (radius * radius)
+                && Math.abs(dy) <= halfH;
         }
 
         // 根据 GLB 节点当前世界坐标更新所有标记球位置 + 坐标轴原点 + 换算系数
@@ -1385,13 +1442,19 @@
             // 同步更新 mm→世界米 换算系数
             if (_markerSpheres.length >= 2) {
                 var worldDist = _markerSpheres[0].position.distanceTo(_markerSpheres[1].position);
-                _mmToWorldScale = worldDist / 4.21;
+                _mmToWorldScale = worldDist / _blDistance;
             }
             // 同步更新脑立体坐标系：原点跟随 Bregma，方向跟随新的解剖轴
-            if (_axisGroup && _markerSpheres.length > 0) {
+            if (_markerSpheres.length > 0) {
                 _computeAnatomicalAxes();
-                _axisGroup.position.copy(_markerSpheres[0].position);
-                _axisGroup.scale.setScalar(_mmToWorldScale / _axisBaseScale);
+            }
+            if (_axesGroup && _markerSpheres.length > 0) {
+                _axesGroup.position.copy(_markerSpheres[0].position);
+                _axesGroup.scale.setScalar(_mmToWorldScale / _axisBaseScale);
+            }
+            if (_gridGroup && _markerSpheres.length > 0) {
+                _gridGroup.position.copy(_markerSpheres[0].position);
+                _gridGroup.scale.setScalar(_mmToWorldScale / _axisBaseScale);
             }
         }
 
@@ -1433,104 +1496,55 @@
                 + ' DV=(' + _dvDir.x.toFixed(4) + ', ' + _dvDir.y.toFixed(4) + ', ' + _dvDir.z.toFixed(4) + ')');
         }
 
-        // 创建脑立体定位坐标系：刻度轴 + 平面栅格
-        // 轴杆：CylinderGeometry + ConeGeometry + 刻度齿
-        // 栅格：AP-ML 平面双级别线
-        function _createStereotaxicAxes() {
+        // ---- 坐标轴 Group（轴杆 + 箭头 + 刻度齿） ----
+        function _createAxesGroup() {
             var group = new THREE.Group();
             group.name = 'StereotaxicAxes';
-
             _axisBaseScale = _mmToWorldScale;
             var W = function (mm) { return mm * _mmToWorldScale; };
+            function _mat(c) { return new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.1 }); }
 
-            function _makeAxisMat(colorHex) {
-                return new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.35, metalness: 0.1 });
-            }
-
-            // 创建单条轴：轴杆 + 箭头 + 刻度齿
             function _makeAxis(dir, lenMM, colorHex, headHMM, headRMM) {
                 var sub = new THREE.Group();
-                var headH = W(headHMM);
-                var headR = W(headRMM);
-                var shaftLen = W(lenMM) - headH;
-                var shaftR = headR * 0.4;
-                var mat = _makeAxisMat(colorHex);
-
-                // 圆柱轴杆
+                var headH = W(headHMM), headR = W(headRMM), shaftLen = W(lenMM) - headH;
+                var shaftR = headR * 0.4, mat = _mat(colorHex);
                 var shaftGeom = new THREE.CylinderGeometry(shaftR, shaftR, shaftLen, 10);
                 shaftGeom.translate(0, shaftLen / 2, 0);
                 sub.add(new THREE.Mesh(shaftGeom, mat));
-
-                // 圆锥箭头
                 var headGeom = new THREE.ConeGeometry(headR, headH, 12);
                 headGeom.translate(0, shaftLen + headH / 2, 0);
                 sub.add(new THREE.Mesh(headGeom, mat));
-
-                // ---- 刻度齿 ----
-                // 【可调参数】tickMajorHalf → 5mm齿半长(mm), tickMinorHalf → 1mm齿半长(mm)
-                var tickMajorHalf = 0.3, tickMinorHalf = 0.15;
-                var tickCount = Math.floor(lenMM);
-                var tickMat = new THREE.LineBasicMaterial({ color: colorHex, depthTest: true });
-
-                for (var t = 0; t <= tickCount; t++) {
-                    var yPos = W(t);
-                    var isMajor = (t % 5 === 0);
-                    var halfLen = isMajor ? W(tickMajorHalf) : W(tickMinorHalf);
-                    var tickGeom = new THREE.BufferGeometry().setFromPoints([
-                        new THREE.Vector3(-halfLen, yPos, 0),
-                        new THREE.Vector3(+halfLen, yPos, 0)
-                    ]);
-                    sub.add(new THREE.Line(tickGeom, tickMat));
-                }
-
-                // 旋转：从 +Y 转到目标方向
-                var quat = new THREE.Quaternion().setFromUnitVectors(
-                    new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+                var quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
                 sub.setRotationFromQuaternion(quat);
-
                 return sub;
             }
 
-            // 三轴：AP(绿) ML(红) DV(蓝)
-            // 【可调参数】axisLen → 轴总长(mm), headH → 箭头高(mm), headR → 箭头半径(mm)
-            var axisLenAP = 1, headH_AP = 0.4, headR_AP = 0.2;
-            var axisLenML = 1, headH_ML = 0.4, headR_ML = 0.2;
-            var axisLenDV = 1, headH_DV = 0.35, headR_DV = 0.18;
-            group.add(_makeAxis(new THREE.Vector3(0, 0, -1), axisLenAP, 0x00CC66, headH_AP, headR_AP));
-            group.add(_makeAxis(new THREE.Vector3(1, 0, 0), axisLenML, 0xFF3333, headH_ML, headR_ML));
-            group.add(_makeAxis(new THREE.Vector3(0, -1, 0), axisLenDV, 0x3388FF, headH_DV, headR_DV));
+            // 【可调参数】轴长/箭头
+            group.add(_makeAxis(new THREE.Vector3(0, 0, -1), 1, 0x00CC66, 0.4, 0.2));  // AP
+            group.add(_makeAxis(new THREE.Vector3(1, 0, 0), 1, 0xFF3333, 0.4, 0.2));   // ML
+            group.add(_makeAxis(new THREE.Vector3(0, -1, 0), 1, 0x3388FF, 0.35, 0.18)); // DV
+            if (_markerSpheres.length > 0) group.position.copy(_markerSpheres[0].position);
+            return group;
+        }
 
-            // ---- AP-ML 平面栅格 (XZ 平面) ----
-            // 【可调参数】gridSpanMM → 栅格半宽(mm), gridStepMM → 线间距(mm)
-            //            majorOpacity → 5mm线深浅, minorOpacity → 1mm线深浅
-            var gridSpanMM = 7, gridStepMM = 1;
-            var majorOpacity = 0.7, minorOpacity = 0.4;
-            var gridSpan = W(gridSpanMM);
-            var gridStep = W(gridStepMM);
+        // ---- 栅格 Group（AP-ML 平面等间距线） ----
+        function _createGridGroup() {
+            var group = new THREE.Group();
+            group.name = 'GridPlane';
+            var W = function (mm) { return mm * _mmToWorldScale; };
+            // 【可调参数】栅格
+            var gridSpanMM = 6, gridStepMM = 1, gridOpacity = 0.6;
+            var gridSpan = W(gridSpanMM), gridStep = W(gridStepMM);
             var steps = Math.round(gridSpan / gridStep);
-            // 5mm 整刻度：黑实线；其余：淡灰细线
-            var matMajor = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: majorOpacity, depthTest: true });
-            var matMinor = new THREE.LineBasicMaterial({ color: 0x444444, transparent: true, opacity: minorOpacity, depthTest: true });
-
+            var mat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: gridOpacity, depthTest: true });
             for (var s = -steps; s <= steps; s++) {
                 var offset = s * gridStep;
-                var isMajor = (s % 5 === 0);
-                var mat = isMajor ? matMajor : matMinor;
-                // ML 方向线（沿 X，不同 Z）
-                group.add(new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([
-                        new THREE.Vector3(-gridSpan, 0, offset), new THREE.Vector3(gridSpan, 0, offset)]), mat));
-                // AP 方向线（沿 Z，不同 X）
-                group.add(new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([
-                        new THREE.Vector3(offset, 0, -gridSpan), new THREE.Vector3(offset, 0, gridSpan)]), mat));
+                group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(-gridSpan, 0, offset), new THREE.Vector3(gridSpan, 0, offset)]), mat));
+                group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(offset, 0, -gridSpan), new THREE.Vector3(offset, 0, gridSpan)]), mat));
             }
-
-            if (_markerSpheres.length > 0) {
-                group.position.copy(_markerSpheres[0].position);
-            }
-
-            console.log('坐标系: 刻度轴2/2/2mm, 栅格±10mm(5mm深/1mm浅), W=' + _mmToWorldScale.toFixed(6));
+            if (_markerSpheres.length > 0) group.position.copy(_markerSpheres[0].position);
             return group;
         }
 
