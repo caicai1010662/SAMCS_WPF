@@ -176,6 +176,44 @@
             background: #2A5BC0;
         }
 
+        /* ---------- 面板内通用按钮 ---------- */
+        .btn-tool {
+            height: 28px;
+            padding: 0 12px;
+            background: #3A3A50;
+            color: #CCCCCC;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        .btn-tool:hover {
+            background: #4A4A60;
+            color: #FFFFFF;
+        }
+
+        .btn-danger {
+            height: 28px;
+            padding: 0 12px;
+            background: #8B3A3A;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        .btn-danger:hover {
+            background: #A04040;
+        }
+
+        .btn-danger.done {
+            background: #5A8A3A;
+        }
+
         /* ---------- 底部图例（纵向排列） ---------- */
         #legend-container {
             position: absolute;
@@ -293,10 +331,10 @@
         <div id="top-left-panels">
             <!--  面板一：显示与调节  -->
             <div class="tl-panel">
-                <button class="tl-toggle" data-target="disp-body">+ 显示与调节</button>
+                <button class="tl-toggle" data-target="disp-body">+ 设置</button>
                 <div class="tl-body" id="disp-body">
                     <div class="toggle-row">
-                        <label><input type="checkbox" id="chk-markers" checked style="accent-color:#00CC66;" />
+                        <label><input type="checkbox" id="chk-markers" checked style="accent-color:#E91E63;" />
                             五点标记</label>
                     </div>
                     <div class="toggle-row">
@@ -304,13 +342,13 @@
                             AP/ML/DV轴</label>
                     </div>
                     <div class="toggle-row">
-                        <label><input type="checkbox" id="chk-grid" checked style="accent-color:#00CC66;" /> 栅格</label>
+                        <label><input type="checkbox" id="chk-grid" checked style="accent-color:#8899AA;" /> 栅格</label>
                     </div>
                     <hr class="panel-sep" />
                     <div class="slider-label">透明度</div>
                     <div class="sc-row">
-                        <input type="range" id="opacity-slider" min="10" max="100" value="100" />
-                        <span class="sc-val" id="opacity-value">1.00</span>
+                        <input type="range" id="opacity-slider" min="10" max="100" value="20" />
+                        <span class="sc-val" id="opacity-value">0.20</span>
                     </div>
                     <div class="slider-label">B-L (mm)</div>
                     <div class="sc-row">
@@ -319,12 +357,10 @@
                     </div>
                     <hr class="panel-sep" />
                     <div class="ctrl-row">
-                        <button id="btn-craniotomy"
-                            style="height:28px;padding:0 12px;background:#8B3A3A;color:#FFF;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-family:'Microsoft YaHei',sans-serif;">颅骨开窗</button>
+                        <button id="btn-craniotomy" class="btn-danger">颅骨开窗</button>
                     </div>
                     <div class="ctrl-row">
-                        <button id="btn-refresh"
-                            style="height:28px;padding:0 12px;background:#3A3A50;color:#CCC;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-family:'Microsoft YaHei',sans-serif;">刷新页面</button>
+                        <button id="btn-refresh" class="btn-tool">刷新页面</button>
                     </div>
                 </div>
             </div>
@@ -333,11 +369,29 @@
                 <button class="tl-toggle" data-target="pose-body">+ 位姿控制</button>
                 <div class="tl-body" id="pose-body">
                     <div class="ctrl-row">
+                        <span class="pose-label">Rot</span>
+                        <input class="pose-input" id="pose-rot" type="text" value="0.000" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="rot" data-delta="1">▲</button>
+                            <button class="pose-step-btn" data-param="rot" data-delta="-1">▼</button>
+                        </div>
+                        <span class="ctrl-unit">°</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <span class="pose-label">Pit</span>
+                        <input class="pose-input" id="pose-pitch" type="text" value="90.000" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="pitch" data-delta="1">▲</button>
+                            <button class="pose-step-btn" data-param="pitch" data-delta="-1">▼</button>
+                        </div>
+                        <span class="ctrl-unit">°</span>
+                    </div>
+                    <div class="ctrl-row">
                         <span class="pose-label">AP</span>
                         <input class="pose-input" id="pose-ap" type="text" value="0.000" />
                         <div class="pose-step-wrap">
-                            <button class="pose-step-btn" data-param="ap" data-delta="0.001">▲</button>
-                            <button class="pose-step-btn" data-param="ap" data-delta="-0.001">▼</button>
+                            <button class="pose-step-btn" data-param="ap" data-delta="0.1">▲</button>
+                            <button class="pose-step-btn" data-param="ap" data-delta="-0.1">▼</button>
                         </div>
                         <span class="ctrl-unit">mm</span>
                     </div>
@@ -345,8 +399,8 @@
                         <span class="pose-label">ML</span>
                         <input class="pose-input" id="pose-ml" type="text" value="0.000" />
                         <div class="pose-step-wrap">
-                            <button class="pose-step-btn" data-param="ml" data-delta="0.001">▲</button>
-                            <button class="pose-step-btn" data-param="ml" data-delta="-0.001">▼</button>
+                            <button class="pose-step-btn" data-param="ml" data-delta="0.1">▲</button>
+                            <button class="pose-step-btn" data-param="ml" data-delta="-0.1">▼</button>
                         </div>
                         <span class="ctrl-unit">mm</span>
                     </div>
@@ -354,28 +408,10 @@
                         <span class="pose-label">DV</span>
                         <input class="pose-input" id="pose-dv" type="text" value="0.000" />
                         <div class="pose-step-wrap">
-                            <button class="pose-step-btn" data-param="dv" data-delta="0.001">▲</button>
-                            <button class="pose-step-btn" data-param="dv" data-delta="-0.001">▼</button>
+                            <button class="pose-step-btn" data-param="dv" data-delta="0.1">▲</button>
+                            <button class="pose-step-btn" data-param="dv" data-delta="-0.1">▼</button>
                         </div>
                         <span class="ctrl-unit">mm</span>
-                    </div>
-                    <div class="ctrl-row">
-                        <span class="pose-label">Rot</span>
-                        <input class="pose-input" id="pose-rot" type="text" value="0.0" style="width:48px" />
-                        <div class="pose-step-wrap">
-                            <button class="pose-step-btn" data-param="rot" data-delta="1.0">▲</button>
-                            <button class="pose-step-btn" data-param="rot" data-delta="-1.0">▼</button>
-                        </div>
-                        <span class="ctrl-unit">°</span>
-                    </div>
-                    <div class="ctrl-row">
-                        <span class="pose-label">Pit</span>
-                        <input class="pose-input" id="pose-pitch" type="text" value="0.0" style="width:48px" />
-                        <div class="pose-step-wrap">
-                            <button class="pose-step-btn" data-param="pitch" data-delta="1.0">▲</button>
-                            <button class="pose-step-btn" data-param="pitch" data-delta="-1.0">▼</button>
-                        </div>
-                        <span class="ctrl-unit">°</span>
                     </div>
                     <div class="ctrl-row">
                         <span class="pose-label"></span>
@@ -437,24 +473,18 @@
         import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
         // ====== 可调参数汇总（按需搜索关键字跳转） ======
-        //   场景外观  → 搜索 "2. 渲染器" / "4. 布光" / "5. 立体底座"
-        //   摄像机    → 搜索 "3. 摄像机"
+        //   渲染器    → 搜索 "1. 渲染器"
+        //   摄像机    → 搜索 "2. 摄像机"
+        //   光照      → 搜索 "3. 布光" / "fillIntensity"
+        //   底座      → 搜索 "4. 立体底座"
         //   颅骨材质  → 搜索 "SKULL_COLOR"
         //   标记球    → 搜索 "markerConfigs"
         //   定位针    → 搜索 "_createNeedleModel"
-        //   坐标轴    → 搜索 "_createStereotaxicAxes"
+        //   坐标轴    → 搜索 "_createAxesGroup"
         //   颅骨切除  → 搜索 "craniotomyCut"
         //   步进按钮  → 搜索 "data-delta" (HTML 中)
 
-        // ===================== 1. 安全锁死 =====================
-        window.addEventListener('contextmenu', e => e.preventDefault(), { capture: true });
-        window.addEventListener('keydown', e => {
-            if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 'r') || e.key === 'BrowserRefresh') {
-                e.preventDefault(); e.stopPropagation();
-            }
-        }, { capture: true });
-
-        // ===================== 2. 渲染器 =====================
+        // ===================== 1. 渲染器 =====================
         const viewport = document.getElementById('viewport');
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -468,7 +498,7 @@
         scene.background = new THREE.Color(0xBADDFC);
         scene.fog = new THREE.Fog(0x5ba0d0, 4, 14);
 
-        // ===================== 3. 摄像机 =====================
+        // ===================== 2. 摄像机 =====================
         const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.01, 100);
         camera.position.set(0, 2, 1.5);
 
@@ -484,23 +514,11 @@
         controls.enablePan = false;   // 禁止拖动平移，仅允许旋转+缩放
         controls.update();
 
-        // 左下角迷你坐标轴（挂在摄像机上，始终可见）
-        const _miniLen = 0.022;  // 迷你轴长
-        const _miniR = 0.006;    // 箭头半径
-        const _miniH = 0.010;    // 箭头高
-        const miniAxes = new THREE.Group();
-        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(), _miniLen, 0x00CC66, _miniH, _miniR)); // AP 绿
-        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), _miniLen, 0xFF3333, _miniH, _miniR)); // ML 红
-        miniAxes.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(), _miniLen, 0x3388FF, _miniH, _miniR)); // DV 蓝
-        // 放在屏幕左下：相机局部坐标 X 负(左) Y 负(下) Z 负(前)
-        miniAxes.position.set(-0.035, -0.024, -0.12);
-        camera.add(miniAxes);
-
-        // ===================== 4. 布光 =====================
+        // ===================== 3. 布光 =====================
         // 半球光：天空冷白 + 地面浅肉色，暗部模拟组织漫反射反光
         scene.add(new THREE.HemisphereLight(0xffffff, 0xebd9d3, 0.5));
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
         keyLight.position.set(0, 6, 0);
         keyLight.castShadow = true;
         keyLight.shadow.mapSize.set(1024, 1024);
@@ -513,8 +531,7 @@
         keyLight.shadow.bias = -0.0003;
         scene.add(keyLight);
 
-
-        // ===================== 5. 立体底座 =====================
+        // ===================== 4. 立体底座 =====================
         // 实心圆柱，阳极氧化铝质感
         // 【可调参数】底座顶半径/底半径(m) / 高度(m) / 颜色
         const BASE_R_TOP = 0.82, BASE_R_BOT = 0.86, BASE_H = 0.04, BASE_Y = -0.50;
@@ -529,7 +546,7 @@
         pedestal.castShadow = true;
         scene.add(pedestal);
 
-        // ===================== 6. 控制台中继到 C# =====================
+        // ===================== 5. 控制台中继到 C# =====================
         // 劫持 console 方法，通过 postMessage 发送到 C# Debug 输出
         const _log = console.log.bind(console);
         const _err = console.error.bind(console);
@@ -553,7 +570,7 @@
             console.error('全局异常: ' + e.message + ' @ ' + e.filename + ':' + e.lineno);
         });
 
-        // ===================== 7. 加载 GLB 模型 =====================
+        // ===================== 6. 加载 GLB 模型 =====================
         // 【可调参数】模型在场景中的目标显示尺寸（单位：米）
         // 加载后会根据包围盒最大边自动等比缩放，使模型恰好适配此尺寸
         // 调小 = 模型缩小，调大 = 模型放大
@@ -628,9 +645,7 @@
                     + ' 中心=(' + center.x.toFixed(3) + ', ' + center.y.toFixed(3) + ', ' + center.z.toFixed(3) + ')');
 
                 // 【可调参数】地面高度，与底座台面 Y 保持一致
-                // const GROUND_Y = -0.48;  // 立体底座台面高度
-
-                const GROUND_Y = -0.3;  // 立体底座台面高度
+                const GROUND_Y = -0.3;
                 // 自动缩放：以包围盒最大边为基准，等比缩放至目标尺寸
                 const maxDim = Math.max(size.x, size.y, size.z);
                 const scale = MODEL_TARGET_SIZE / maxDim;
@@ -658,15 +673,15 @@
                 //   metalness → 金属度(0=塑料, 1=金属)
                 const markerConfigs = [
                     // Point_1_Bregma — 前囟（基准原点）品红
-                    { name: 'Point_1_Bregma', radius: 9.5, color: 0xE91E63, emissive: 0x2D000D, roughness: 0.25, metalness: 0.15 },
+                    { name: 'Point_1_Bregma', radius: 7, color: 0xE91E63, emissive: 0x2D000D, roughness: 0.25, metalness: 0.15 },
                     // Point_2_Lambda — 人字缝（后囟）青色
-                    { name: 'Point_2_Lambda', radius: 9.5, color: 0x00BCD4, emissive: 0x001B20, roughness: 0.25, metalness: 0.15 },
+                    { name: 'Point_2_Lambda', radius: 7, color: 0x00BCD4, emissive: 0x001B20, roughness: 0.25, metalness: 0.15 },
                     // Point_3_Midpoint — 前后囟中点 琥珀
-                    { name: 'Point_3_Midpoint', radius: 9.5, color: 0xFFC107, emissive: 0x2D1E00, roughness: 0.25, metalness: 0.15 },
+                    { name: 'Point_3_Midpoint', radius: 7, color: 0xFFC107, emissive: 0x2D1E00, roughness: 0.25, metalness: 0.15 },
                     // Point_4_MidLeft — 左侧中点 翠绿
-                    { name: 'Point_4_MidLeft', radius: 9.5, color: 0x4CAF50, emissive: 0x0A1C0B, roughness: 0.25, metalness: 0.15 },
+                    { name: 'Point_4_MidLeft', radius: 7, color: 0x4CAF50, emissive: 0x0A1C0B, roughness: 0.25, metalness: 0.15 },
                     // Point_5_MidRight — 右侧中点 橙红
-                    { name: 'Point_5_MidRight', radius: 9.5, color: 0xFF5722, emissive: 0x2D0C00, roughness: 0.25, metalness: 0.15 }
+                    { name: 'Point_5_MidRight', radius: 7, color: 0xFF5722, emissive: 0x2D0C00, roughness: 0.25, metalness: 0.15 }
                 ];
 
                 for (let i = 0; i < markerConfigs.length; i++) {
@@ -760,6 +775,9 @@
                 } catch (e) {
                     console.error('坐标系创建失败: ' + e.message);
                 }
+
+                // 设置默认透明度 0.2（模型加载完成后自动应用）
+                window.setSkullOpacity(0.2);
             },
             (progress) => {
                 if (progress.total > 0) {
@@ -770,7 +788,7 @@
             (err) => console.error('GLB 加载失败: ' + (err.message || err))
         );
 
-        // ===================== 8A. C# 调用接口 =====================
+        // ===================== 7A. C# 调用接口（透明度/缩放/定位针/颅骨切除） =====================
 
         // 获取模型基本信息
         window.getModelInfo = () => JSON.stringify({
@@ -786,7 +804,7 @@
                 return JSON.stringify({ ok: false, error: '模型尚未加载' });
             }
             var opacity = parseFloat(value);
-            if (isNaN(opacity)) opacity = 1.0;
+            if (isNaN(opacity)) opacity = 1.0;  // 默认值
             if (opacity < 0.1) opacity = 0.1;
             if (opacity > 1.0) opacity = 1.0;
 
@@ -952,15 +970,18 @@
 
             _needleGroup.position.set(worldX, worldY, worldZ);
 
-            // 旋转：使定位针的本地 Y 轴（针杆方向）对齐到 DV 方向，
-            // 再绕 DV 轴旋转 rotation 度，再偏离 pitch 度
-            // 先用 lookAt 让针尖 +Y 对准 DV 方向
-            var dvTarget = new THREE.Vector3(worldX + _dvDir.x, worldY + _dvDir.y, worldZ + _dvDir.z);
-            _needleGroup.up.copy(_apDir);  // 针的"上方"对准 AP 方向
-            _needleGroup.lookAt(dvTarget);
-            // 额外旋转：绕本地 DV 轴转 rotation，绕本地 ML 轴转 pitch
-            _needleGroup.rotateOnWorldAxis(_dvDir, THREE.MathUtils.degToRad(rotation));
-            _needleGroup.rotateOnWorldAxis(_mlDir, THREE.MathUtils.degToRad(pitch));
+            // 针杆 +Y 对齐 DV 方向，针上方 +Z 对齐 AP 方向
+            // X = cross(DV, AP) = -ML，保证右手正交
+            var xDir = new THREE.Vector3().crossVectors(_dvDir, _apDir).normalize();
+            var m4 = new THREE.Matrix4().makeBasis(xDir, _dvDir, _apDir);
+            _needleGroup.quaternion.setFromRotationMatrix(m4);
+            // Pit 转换公式：- pitch - 90
+            var internalPitch = -pitch - 90;
+            _needleGroup.rotateOnWorldAxis(_mlDir, THREE.MathUtils.degToRad(internalPitch));
+            var negDv = new THREE.Vector3().copy(_dvDir).negate();
+            // Rot 转换公式：-rotation
+            var internalRotation = -rotation;
+            _needleGroup.rotateOnWorldAxis(negDv, THREE.MathUtils.degToRad(internalRotation));
 
             // 如果相机锁定针尖，同步更新轨道中心
             if (_cameraLockedToNeedle) {
@@ -1047,7 +1068,6 @@
 
             // 切除参数：半径 0.3mm，Y 轴高度限制（只切表层，不贯穿）
             var cutRadius = 0.3 * _mmToWorldScale / _skullModel.scale.x;
-            // var cutHalfH = cutRadius * 0.5;  // Y 轴半高，限制切除深度
             var cutHalfH = 0.4;  // Y 轴半高，限制切除深度
 
             console.log('颅骨切除: 针尖本地=(' + tipLocal.x.toFixed(4) + ', '
@@ -1163,7 +1183,7 @@
             });
         };
 
-        // ===================== 8B. 控制条交互 =====================
+        // ===================== 7B. 面板交互（折叠/步进/复选框/按钮/滑块） =====================
         // （HTML 内部自闭环，不依赖 C#。调用链：按钮 → _stepParam → _applyPoseFromDOM → window.setNeedlePose）
 
         // 从 DOM 输入框读取 5 个位姿值（使用缓存引用）
@@ -1174,12 +1194,17 @@
             var rotation = parseFloat(_elRot.value);
             var pitch = parseFloat(_elPit.value);
 
+            // Pit 限制在 [0, 90]
+            var pitVal = isNaN(pitch) ? 0 : pitch;
+            if (pitVal < 0) pitVal = 0;
+            if (pitVal > 90) pitVal = 90;
+
             return {
                 ap: isNaN(ap) ? 0 : ap,
                 ml: isNaN(ml) ? 0 : ml,
                 dv: isNaN(dv) ? 0 : dv,
                 rotation: isNaN(rotation) ? 0 : rotation,
-                pitch: isNaN(pitch) ? 0 : pitch
+                pitch: pitVal
             };
         }
 
@@ -1245,6 +1270,11 @@
             var current = parseFloat(el.value);
             if (isNaN(current)) current = 0;
             var newVal = current + delta;
+            // Pit 限制在 [0, 90]
+            if (param === 'pitch') {
+                if (newVal < 0) newVal = 0;
+                if (newVal > 90) newVal = 90;
+            }
             el.value = newVal.toFixed(3);
             _applyPoseFromDOM();
         }
@@ -1353,7 +1383,7 @@
                     var res = JSON.parse(result);
                     if (res.ok) {
                         craniotomyBtn.textContent = '已切除 ' + res.removedTriangles + '△';
-                        craniotomyBtn.style.background = '#5A8A3A';
+                        craniotomyBtn.classList.add('done');
                     } else {
                         console.warn('颅骨切除失败: ' + res.error);
                     }
@@ -1400,7 +1430,7 @@
 
         // _initPoseBar 在 GLB 加载回调末尾调用
 
-        // ===================== 8C. 内部辅助函数 =====================
+        // ===================== 7C. 内部辅助（mesh查找/圆柱判断/标记同步/解剖轴/坐标轴/栅格/定位针模型） =====================
         // _findSkullMesh / _ptInCylinder → craniotomyCut 调用
         // _updateAllMarkerPositions      → 缩放 + 坐标轴同步
         // _createStereotaxicAxes         → 脑立体坐标系 + 栅格
@@ -1560,32 +1590,32 @@
             var group = new THREE.Group();
             group.name = 'NeedleElectrode';
 
-            var NEEDLE_CONE_R = 0.004;   // 锥尖半径（细针）
+            var NEEDLE_CONE_R = 0.008;   // 锥尖半径（加粗）
             var NEEDLE_CONE_H = 0.10;    // 锥尖高
             var NEEDLE_SHAFT_H = 0.05;   // 针杆高
             var NEEDLE_DASH_LEN = 0.07;  // 虚线长度
 
-            // 共享材质：金色
-            var mat = new THREE.MeshStandardMaterial({
+            // 锥尖+针杆共用材质：亮金色，高自发光
+            var needleMat = new THREE.MeshStandardMaterial({
                 color: 0xffaa00,
                 roughness: 0.2,
                 metalness: 0.6,
-                emissive: 0x331100,
-                emissiveIntensity: 0.3
+                emissive: 0xffaa00,
+                emissiveIntensity: 0.9
             });
 
             // ===== 针尖：圆锥 =====
-            var tipGeom = new THREE.ConeGeometry(NEEDLE_CONE_R, NEEDLE_CONE_H, 8);
+            var tipGeom = new THREE.ConeGeometry(NEEDLE_CONE_R, NEEDLE_CONE_H, 10);
             tipGeom.rotateX(Math.PI);
             tipGeom.translate(0, NEEDLE_CONE_H / 2, 0);
-            var tipMesh = new THREE.Mesh(tipGeom, mat);
+            var tipMesh = new THREE.Mesh(tipGeom, needleMat);
             tipMesh.castShadow = true;
             group.add(tipMesh);
 
             // ===== 针杆：圆柱 =====
-            var shaftGeom = new THREE.CylinderGeometry(NEEDLE_CONE_R, NEEDLE_CONE_R, NEEDLE_SHAFT_H, 8);
+            var shaftGeom = new THREE.CylinderGeometry(NEEDLE_CONE_R, NEEDLE_CONE_R, NEEDLE_SHAFT_H, 10);
             shaftGeom.translate(0, NEEDLE_CONE_H + NEEDLE_SHAFT_H / 2, 0);
-            var shaftMesh = new THREE.Mesh(shaftGeom, mat);
+            var shaftMesh = new THREE.Mesh(shaftGeom, needleMat);
             shaftMesh.castShadow = true;
             group.add(shaftMesh);
 
@@ -1606,7 +1636,7 @@
             return group;
         }
 
-        // ===================== 9. 渲染循环 =====================
+        // ===================== 8. 渲染循环 =====================
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
