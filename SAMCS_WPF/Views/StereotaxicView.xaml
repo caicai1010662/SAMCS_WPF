@@ -78,13 +78,13 @@
 
         <!--  Jog 正转按钮（蓝底白字）  -->
         <Style x:Key="JogPlusButton" TargetType="Button">
-            <Setter Property="Width" Value="100" />
+            <Setter Property="Width" Value="80" />
             <Setter Property="Height" Value="44" />
             <Setter Property="Background" Value="#0088FF" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="BorderBrush" Value="#0066CC" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontSize" Value="34" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -96,15 +96,15 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="5">
+                            CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#005BB5" />
+                                <Setter TargetName="border" Property="Background" Value="#004C99" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#004A9E" />
+                                <Setter TargetName="border" Property="Background" Value="#001A40" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -112,15 +112,15 @@
             </Setter>
         </Style>
 
-        <!--  Jog 反转按钮（深灰底白字）  -->
+        <!--  Jog 反转按钮（蓝底白字）  -->
         <Style x:Key="JogMinusButton" TargetType="Button">
-            <Setter Property="Width" Value="100" />
+            <Setter Property="Width" Value="80" />
             <Setter Property="Height" Value="44" />
-            <Setter Property="Background" Value="#3A3A3C" />
+            <Setter Property="Background" Value="#0088FF" />
             <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderBrush" Value="#2C2C2E" />
+            <Setter Property="BorderBrush" Value="#0066CC" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontSize" Value="34" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -132,15 +132,15 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="5">
+                            CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#4A4A4D" />
+                                <Setter TargetName="border" Property="Background" Value="#004C99" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#2C2C2E" />
+                                <Setter TargetName="border" Property="Background" Value="#001A40" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -1432,9 +1432,9 @@
                                     <Border
                                         Margin="0,0,0,5"
                                         Padding="6,3"
+                                        HorizontalAlignment="Stretch"
                                         Background="#EBF5FF"
-                                        CornerRadius="4"
-                                        HorizontalAlignment="Stretch">
+                                        CornerRadius="4">
                                         <TextBlock
                                             FontSize="13"
                                             FontWeight="SemiBold"
@@ -1463,17 +1463,27 @@
                                                     <ColumnDefinition Width="8" />
                                                     <ColumnDefinition Width="70" />
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Grid.ColumnSpan="3"
-                                                        Height="34" Padding="10,5"
-                                                        HorizontalAlignment="Stretch"
-                                                        Command="{Binding SetBregmaCommand}" Content="设置"
-                                                        FontSize="13" FontWeight="SemiBold"
-                                                        Style="{StaticResource PrimaryButton}" />
-                                                <Button Grid.Column="4" Width="70"
-                                                        Height="34" Padding="10,5"
-                                                        Command="{Binding DeleteBregmaCommand}" Content="删除"
-                                                        FontSize="13" FontWeight="SemiBold"
-                                                        Style="{StaticResource MaterialButton}" />
+                                                <Button
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="3"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    HorizontalAlignment="Stretch"
+                                                    Command="{Binding SetBregmaCommand}"
+                                                    Content="设置"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Grid.Column="4"
+                                                    Width="70"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    Command="{Binding DeleteBregmaCommand}"
+                                                    Content="删除"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource MaterialButton}" />
                                             </Grid>
                                             <TextBlock
                                                 Grid.Column="3"
@@ -1538,17 +1548,27 @@
                                                         <ColumnDefinition Width="8" />
                                                         <ColumnDefinition Width="70" />
                                                     </Grid.ColumnDefinitions>
-                                                    <Button Grid.Column="0" Grid.ColumnSpan="3"
-                                                            Height="34" Padding="10,5"
-                                                            HorizontalAlignment="Stretch"
-                                                            Command="{Binding SetLambdaCommand}" Content="设置"
-                                                            FontSize="13" FontWeight="SemiBold"
-                                                            Style="{StaticResource PrimaryButton}" />
-                                                    <Button Grid.Column="4" Width="70"
-                                                            Height="34" Padding="10,5"
-                                                            Command="{Binding DeleteLambdaCommand}" Content="删除"
-                                                            FontSize="13" FontWeight="SemiBold"
-                                                            Style="{StaticResource MaterialButton}" />
+                                                    <Button
+                                                        Grid.Column="0"
+                                                        Grid.ColumnSpan="3"
+                                                        Height="34"
+                                                        Padding="10,5"
+                                                        HorizontalAlignment="Stretch"
+                                                        Command="{Binding SetLambdaCommand}"
+                                                        Content="设置"
+                                                        FontSize="13"
+                                                        FontWeight="SemiBold"
+                                                        Style="{StaticResource PrimaryButton}" />
+                                                    <Button
+                                                        Grid.Column="4"
+                                                        Width="70"
+                                                        Height="34"
+                                                        Padding="10,5"
+                                                        Command="{Binding DeleteLambdaCommand}"
+                                                        Content="删除"
+                                                        FontSize="13"
+                                                        FontWeight="SemiBold"
+                                                        Style="{StaticResource MaterialButton}" />
                                                 </Grid>
                                                 <TextBlock
                                                     Grid.Column="3"
@@ -1598,7 +1618,7 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <!--  步骤 3: 前后囟中点  -->
+                                    <!--  步骤 3: 设置中间点  -->
                                     <Border Style="{StaticResource FivePointStepBorder}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -1610,7 +1630,7 @@
                                             <TextBlock
                                                 Grid.Column="0"
                                                 Style="{StaticResource FivePointStepLabel}"
-                                                Text="3. 前后囟中点" />
+                                                Text="3. 设置中间点" />
                                             <Grid Grid.Column="2">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="70" />
@@ -1619,9 +1639,15 @@
                                                     <ColumnDefinition Width="8" />
                                                     <ColumnDefinition Width="70" />
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Width="70" Height="34" Padding="10,5"
-                                                        Command="{Binding MoveToMidpointCommand}" Content="移动至"
-                                                        FontSize="13" FontWeight="SemiBold">
+                                                <Button
+                                                    Grid.Column="0"
+                                                    Width="70"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    Command="{Binding MoveToMidpointCommand}"
+                                                    Content="移动至"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold">
                                                     <Button.Style>
                                                         <Style BasedOn="{StaticResource MaterialButton}" TargetType="Button">
                                                             <Setter Property="IsEnabled" Value="False" />
@@ -1633,14 +1659,26 @@
                                                         </Style>
                                                     </Button.Style>
                                                 </Button>
-                                                <Button Grid.Column="2" Width="70" Height="34" Padding="10,5"
-                                                        Command="{Binding SetMidpointCommand}" Content="设置"
-                                                        FontSize="13" FontWeight="SemiBold"
-                                                        Style="{StaticResource PrimaryButton}" />
-                                                <Button Grid.Column="4" Width="70" Height="34" Padding="10,5"
-                                                        Command="{Binding DeleteMidpointCommand}" Content="删除"
-                                                        FontSize="13" FontWeight="SemiBold"
-                                                        Style="{StaticResource MaterialButton}" />
+                                                <Button
+                                                    Grid.Column="2"
+                                                    Width="70"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    Command="{Binding SetMidpointCommand}"
+                                                    Content="设置"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Grid.Column="4"
+                                                    Width="70"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    Command="{Binding DeleteMidpointCommand}"
+                                                    Content="删除"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource MaterialButton}" />
                                             </Grid>
                                             <TextBlock
                                                 Grid.Column="3"
@@ -1683,7 +1721,7 @@
                                         </Grid>
                                     </Border>
 
-                                    <!--  步骤 4: 左位点  -->
+                                    <!--  步骤 4: 设置左位点  -->
                                     <Border Style="{StaticResource FivePointStepBorder}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -1695,7 +1733,7 @@
                                             <TextBlock
                                                 Grid.Column="0"
                                                 Style="{StaticResource FivePointStepLabel}"
-                                                Text="4. 左位点" />
+                                                Text="4. 设置左位点" />
                                             <Grid Grid.Column="2">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="70" />
@@ -1704,9 +1742,15 @@
                                                     <ColumnDefinition Width="8" />
                                                     <ColumnDefinition Width="70" />
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Width="70" Height="34" Padding="10,5"
-                                                        Command="{Binding MoveToMidLeftCommand}" Content="移动至"
-                                                        FontSize="13" FontWeight="SemiBold">
+                                                <Button
+                                                    Grid.Column="0"
+                                                    Width="70"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    Command="{Binding MoveToMidLeftCommand}"
+                                                    Content="移动至"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold">
                                                     <Button.Style>
                                                         <Style BasedOn="{StaticResource MaterialButton}" TargetType="Button">
                                                             <Setter Property="IsEnabled" Value="False" />
@@ -1718,14 +1762,26 @@
                                                         </Style>
                                                     </Button.Style>
                                                 </Button>
-                                                <Button Grid.Column="2" Width="70" Height="34" Padding="10,5"
-                                                        Command="{Binding SetMidLeftCommand}" Content="设置"
-                                                        FontSize="13" FontWeight="SemiBold"
-                                                        Style="{StaticResource PrimaryButton}" />
-                                                <Button Grid.Column="4" Width="70" Height="34" Padding="10,5"
-                                                        Command="{Binding DeleteMidLeftCommand}" Content="删除"
-                                                        FontSize="13" FontWeight="SemiBold"
-                                                        Style="{StaticResource MaterialButton}" />
+                                                <Button
+                                                    Grid.Column="2"
+                                                    Width="70"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    Command="{Binding SetMidLeftCommand}"
+                                                    Content="设置"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource PrimaryButton}" />
+                                                <Button
+                                                    Grid.Column="4"
+                                                    Width="70"
+                                                    Height="34"
+                                                    Padding="10,5"
+                                                    Command="{Binding DeleteMidLeftCommand}"
+                                                    Content="删除"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource MaterialButton}" />
                                             </Grid>
                                             <TextBlock
                                                 Grid.Column="3"
@@ -1768,7 +1824,7 @@
                                         </Grid>
                                     </Border>
 
-                                    <!--  步骤 5: 右位点  -->
+                                    <!--  步骤 5: 设置右位点  -->
                                     <Border Style="{StaticResource FivePointStepBorder}">
                                         <StackPanel>
                                             <Grid>
@@ -1781,7 +1837,7 @@
                                                 <TextBlock
                                                     Grid.Column="0"
                                                     Style="{StaticResource FivePointStepLabel}"
-                                                    Text="5. 右位点" />
+                                                    Text="5. 设置右位点" />
                                                 <Grid Grid.Column="2">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="70" />
@@ -1790,9 +1846,15 @@
                                                         <ColumnDefinition Width="8" />
                                                         <ColumnDefinition Width="70" />
                                                     </Grid.ColumnDefinitions>
-                                                    <Button Grid.Column="0" Width="70" Height="34" Padding="10,5"
-                                                            Command="{Binding MoveToMidRightCommand}" Content="移动至"
-                                                            FontSize="13" FontWeight="SemiBold">
+                                                    <Button
+                                                        Grid.Column="0"
+                                                        Width="70"
+                                                        Height="34"
+                                                        Padding="10,5"
+                                                        Command="{Binding MoveToMidRightCommand}"
+                                                        Content="移动至"
+                                                        FontSize="13"
+                                                        FontWeight="SemiBold">
                                                         <Button.Style>
                                                             <Style BasedOn="{StaticResource MaterialButton}" TargetType="Button">
                                                                 <Setter Property="IsEnabled" Value="False" />
@@ -1804,14 +1866,26 @@
                                                             </Style>
                                                         </Button.Style>
                                                     </Button>
-                                                    <Button Grid.Column="2" Width="70" Height="34" Padding="10,5"
-                                                            Command="{Binding SetMidRightCommand}" Content="设置"
-                                                            FontSize="13" FontWeight="SemiBold"
-                                                            Style="{StaticResource PrimaryButton}" />
-                                                    <Button Grid.Column="4" Width="70" Height="34" Padding="10,5"
-                                                            Command="{Binding DeleteMidRightCommand}" Content="删除"
-                                                            FontSize="13" FontWeight="SemiBold"
-                                                            Style="{StaticResource MaterialButton}" />
+                                                    <Button
+                                                        Grid.Column="2"
+                                                        Width="70"
+                                                        Height="34"
+                                                        Padding="10,5"
+                                                        Command="{Binding SetMidRightCommand}"
+                                                        Content="设置"
+                                                        FontSize="13"
+                                                        FontWeight="SemiBold"
+                                                        Style="{StaticResource PrimaryButton}" />
+                                                    <Button
+                                                        Grid.Column="4"
+                                                        Width="70"
+                                                        Height="34"
+                                                        Padding="10,5"
+                                                        Command="{Binding DeleteMidRightCommand}"
+                                                        Content="删除"
+                                                        FontSize="13"
+                                                        FontWeight="SemiBold"
+                                                        Style="{StaticResource MaterialButton}" />
                                                 </Grid>
                                                 <TextBlock
                                                     Grid.Column="3"
@@ -1881,9 +1955,9 @@
                                 <Border
                                     Margin="0,5,0,5"
                                     Padding="6,3"
+                                    HorizontalAlignment="Stretch"
                                     Background="#EBF5FF"
-                                    CornerRadius="4"
-                                    HorizontalAlignment="Stretch">
+                                    CornerRadius="4">
                                     <TextBlock
                                         FontSize="13"
                                         FontWeight="SemiBold"
@@ -1893,11 +1967,11 @@
 
                                 <Border
                                     Padding="12,10"
+                                    HorizontalAlignment="Stretch"
                                     Background="#FAFAFC"
                                     BorderBrush="#E8E8EC"
                                     BorderThickness="1"
-                                    CornerRadius="5"
-                                    HorizontalAlignment="Stretch">
+                                    CornerRadius="5">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />

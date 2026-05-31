@@ -115,6 +115,7 @@ namespace SAMCS_WPF.Views
 
                 // 禁用所有浏览器快捷键（F5刷新、Ctrl+R等）
                 WebViewSkull.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
+                //WebViewSkull.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = true;
 
                 // WebView2 背景透明化
                 WebViewSkull.DefaultBackgroundColor = System.Drawing.Color.Transparent;
