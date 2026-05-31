@@ -34,11 +34,23 @@
             display: block;
         }
 
-        /* ---------- 左上角双面板 ---------- */
+        /* ---------- 左上角面板 ---------- */
         #top-left-panels {
             position: absolute;
             top: 8px;
             left: 8px;
+            z-index: 10;
+            display: flex;
+            gap: 6px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ---------- 右上角位姿控制面板 ---------- */
+        #top-right-panels {
+            position: absolute;
+            top: 8px;
+            right: 8px;
             z-index: 10;
             display: flex;
             gap: 6px;
@@ -261,6 +273,55 @@
             flex-shrink: 0;
         }
 
+        /* ---------- 右下角实时位姿显示 ---------- */
+        #pose-display {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            z-index: 10;
+            padding: 6px 12px;
+            background: rgba(20, 20, 35, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        .pose-display-label {
+            color: #8899AA;
+            font-size: 10px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .pose-display-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 18px;
+            font-size: 11px;
+        }
+
+        .pose-display-row span:first-child {
+            color: #8899AA;
+            width: 24px;
+            flex-shrink: 0;
+        }
+
+        .pose-display-row span:nth-child(2) {
+            color: #E0E0E0;
+            font-family: 'Consolas', monospace;
+            min-width: 48px;
+            text-align: right;
+        }
+
+        .pose-display-row span:last-child {
+            color: #778888;
+            font-size: 9px;
+            width: 18px;
+        }
+
         /* ---------- 面板内复用样式 ---------- */
         .toggle-row {
             display: flex;
@@ -331,18 +392,18 @@
         <div id="top-left-panels">
             <!--  面板一：显示与调节  -->
             <div class="tl-panel">
-                <button class="tl-toggle" data-target="disp-body">+ 设置</button>
+                <button class="tl-toggle" data-target="disp-body">+ 显示设置</button>
                 <div class="tl-body" id="disp-body">
                     <div class="toggle-row">
                         <label><input type="checkbox" id="chk-markers" checked style="accent-color:#E91E63;" />
                             五点标记</label>
                     </div>
                     <div class="toggle-row">
-                        <label><input type="checkbox" id="chk-axes" checked style="accent-color:#00CC66;" />
+                        <label><input type="checkbox" id="chk-axes" checked style="accent-color:#E91E63;" />
                             AP/ML/DV轴</label>
                     </div>
                     <div class="toggle-row">
-                        <label><input type="checkbox" id="chk-grid" checked style="accent-color:#8899AA;" /> 栅格</label>
+                        <label><input type="checkbox" id="chk-grid" checked style="accent-color:#E91E63;" /> 栅格</label>
                     </div>
                     <hr class="panel-sep" />
                     <div class="slider-label">透明度</div>
@@ -364,7 +425,10 @@
                     </div>
                 </div>
             </div>
-            <!--  面板二：位姿控制  -->
+        </div>
+
+        <!--  右上角：位姿控制  -->
+        <div id="top-right-panels">
             <div class="tl-panel">
                 <button class="tl-toggle" data-target="pose-body">+ 位姿控制</button>
                 <div class="tl-body" id="pose-body">
@@ -414,8 +478,17 @@
                         <span class="ctrl-unit">mm</span>
                     </div>
                     <div class="ctrl-row">
+                        <span class="pose-label">Dep</span>
+                        <input class="pose-input" id="pose-dep" type="text" value="0.000" />
+                        <div class="pose-step-wrap">
+                            <button class="pose-step-btn" data-param="dep" data-delta="0.1">▲</button>
+                            <button class="pose-step-btn" data-param="dep" data-delta="-0.1">▼</button>
+                        </div>
+                        <span class="ctrl-unit">mm</span>
+                    </div>
+                    <div class="ctrl-row">
                         <span class="pose-label"></span>
-                        <button id="pose-apply">应用</button>
+                        <button id="pose-reset" class="btn-tool">重置</button>
                     </div>
                 </div>
             </div>
@@ -453,6 +526,30 @@
                     DV
                 </div>
             </div>
+            <div class="legend-box" id="legend-grid-box">
+                <div class="legend-item">
+                    <svg width="28" height="12" viewBox="0 0 28 12">
+                        <line x1="2" y1="2" x2="26" y2="2" stroke="#FFFFFF" stroke-width="1" />
+                        <line x1="2" y1="6" x2="26" y2="6" stroke="#FFFFFF" stroke-width="1" />
+                        <line x1="2" y1="10" x2="26" y2="10" stroke="#FFFFFF" stroke-width="1" />
+                        <line x1="2" y1="2" x2="2" y2="10" stroke="#FFFFFF" stroke-width="1" />
+                        <line x1="14" y1="2" x2="14" y2="10" stroke="#FFFFFF" stroke-width="1" />
+                        <line x1="26" y1="2" x2="26" y2="10" stroke="#FFFFFF" stroke-width="1" />
+                    </svg>
+                    Grid
+                </div>
+            </div>
+        </div>
+
+        <!--  右下角实时位姿显示面板  -->
+        <div id="pose-display">
+            <div class="pose-display-label">实时位姿</div>
+            <div class="pose-display-row"><span>Rot</span><span id="disp-rot">0.000</span><span>°</span></div>
+            <div class="pose-display-row"><span>Pit</span><span id="disp-pit">90.000</span><span>°</span></div>
+            <div class="pose-display-row"><span>AP</span><span id="disp-ap">0.000</span><span>mm</span></div>
+            <div class="pose-display-row"><span>ML</span><span id="disp-ml">0.000</span><span>mm</span></div>
+            <div class="pose-display-row"><span>DV</span><span id="disp-dv">0.000</span><span>mm</span></div>
+            <div class="pose-display-row"><span>Dep</span><span id="disp-dep">0.000</span><span>mm</span></div>
         </div>
 
     </div>
@@ -471,6 +568,9 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+        // 禁用页面右键菜单
+        window.addEventListener('contextmenu', e => e.preventDefault());
 
         // ====== 可调参数汇总（按需搜索关键字跳转） ======
         //   渲染器    → 搜索 "1. 渲染器"
@@ -595,7 +695,7 @@
         let _mlDir = new THREE.Vector3();  // ML 轴方向（右），从标记点动态计算
         let _dvDir = new THREE.Vector3();  // DV 轴方向（腹），cross(AP, ML) 正交得出
         // DOM 缓存：位姿输入框，_initPoseBar 中初始化
-        let _elAp = null, _elMl = null, _elDv = null, _elRot = null, _elPit = null;
+        let _elAp = null, _elMl = null, _elDv = null, _elRot = null, _elPit = null, _elDep = null;
         const loader = new GLTFLoader();
 
         // 自动检测运行环境：WebView2 用虚拟主机，普通浏览器用相对路径
@@ -948,50 +1048,59 @@
         };
 
         // 以脑立体定位坐标设置针尖位姿
-        // ap: 前后 (Anterior-Posterior)，单位 mm，Bregma 为 0，前方为正
-        // ml: 左右 (Medial-Lateral)，单位 mm，中线为 0，右侧为正
-        // dv: 背腹 (Dorsal-Ventral)，单位 mm，颅骨表面为 0，深入脑内为正
-        // rotation: 绕 DV 轴旋转角，单位 度
-        // pitch: 偏离 DV 轴倾角，单位 度
-        window.setNeedlePose = (ap, ml, dv, rotation, pitch) => {
+        // ap/ml/dv: 空间定位 (mm)，Bregma 为原点
+        // rotation/pitch: 姿态 (°)，决定杆方向
+        // dep: 沿杆方向深度 (mm)，正=深入脑内
+        window.setNeedlePose = (ap, ml, dv, rotation, pitch, dep) => {
             if (!_needleGroup || _markerSpheres.length === 0) {
                 return JSON.stringify({ ok: false, error: '模型或标记点未就绪' });
             }
+            if (dep === undefined) dep = 0;
 
-            // Bregma 标记球 (索引 0) 的当前位置作为坐标原点
             var bregma = _markerSpheres[0].position;
-            // 使用加载时计算的 mm→世界米 换算系数
             var S = _mmToWorldScale;
 
-            // 世界坐标 = Bregma + ap*_apDir*S + ml*_mlDir*S + dv*_dvDir*S
-            var worldX = bregma.x + ap * _apDir.x * S + ml * _mlDir.x * S + dv * _dvDir.x * S;
-            var worldY = bregma.y + ap * _apDir.y * S + ml * _mlDir.y * S + dv * _dvDir.y * S;
-            var worldZ = bregma.z + ap * _apDir.z * S + ml * _mlDir.z * S + dv * _dvDir.z * S;
+            // ---- 计算杆方向 shaftDir ----
+            var internalPitch = -pitch - 90;
+            var internalRotation = -rotation;
+            var negDv = new THREE.Vector3().copy(_dvDir).negate();
+            var shaftDir = _dvDir.clone();
+            shaftDir.applyAxisAngle(_mlDir, THREE.MathUtils.degToRad(internalPitch));
+            shaftDir.applyAxisAngle(negDv, THREE.MathUtils.degToRad(internalRotation));
 
+            // ---- 总偏移 = AP/ML/DV + Dep沿杆方向 ----
+            var offsetMM = new THREE.Vector3();
+            offsetMM.addScaledVector(_apDir, ap);
+            offsetMM.addScaledVector(_mlDir, ml);
+            offsetMM.addScaledVector(_dvDir, dv);
+            offsetMM.addScaledVector(shaftDir, dep);
+
+            // ---- 世界坐标 ----
+            var worldX = bregma.x + offsetMM.x * S;
+            var worldY = bregma.y + offsetMM.y * S;
+            var worldZ = bregma.z + offsetMM.z * S;
             _needleGroup.position.set(worldX, worldY, worldZ);
 
-            // 针杆 +Y 对齐 DV 方向，针上方 +Z 对齐 AP 方向
-            // X = cross(DV, AP) = -ML，保证右手正交
+            // ---- 针杆姿态 ----
             var xDir = new THREE.Vector3().crossVectors(_dvDir, _apDir).normalize();
             var m4 = new THREE.Matrix4().makeBasis(xDir, _dvDir, _apDir);
             _needleGroup.quaternion.setFromRotationMatrix(m4);
-            // Pit 转换公式：- pitch - 90
-            var internalPitch = -pitch - 90;
             _needleGroup.rotateOnWorldAxis(_mlDir, THREE.MathUtils.degToRad(internalPitch));
-            var negDv = new THREE.Vector3().copy(_dvDir).negate();
-            // Rot 转换公式：-rotation
-            var internalRotation = -rotation;
             _needleGroup.rotateOnWorldAxis(negDv, THREE.MathUtils.degToRad(internalRotation));
 
-            // 如果相机锁定针尖，同步更新轨道中心
             if (_cameraLockedToNeedle) {
                 controls.target.set(worldX, worldY, worldZ);
             }
 
-            // 同步更新 DOM 控制条输入框
-            _syncPoseToDOM(ap, ml, dv, rotation, pitch);
+            // ---- 反算 AP/ML/DV（总偏移投影到解剖轴） ----
+            var newAp = offsetMM.dot(_apDir);
+            var newMl = offsetMM.dot(_mlDir);
+            var newDv = offsetMM.dot(_dvDir);
 
-            return JSON.stringify({ ok: true, ap: ap, ml: ml, dv: dv, rotation: rotation, pitch: pitch });
+            _syncPoseToDOM(newAp, newMl, newDv, rotation, pitch, dep);
+            _syncPoseToDisplay(newAp, newMl, newDv, rotation, pitch, dep);
+
+            return JSON.stringify({ ok: true, ap: newAp, ml: newMl, dv: newDv, rotation: rotation, pitch: pitch, dep: dep });
         };
 
         // 获取当前针尖位姿（以 Bregma 为原点的脑立体定位坐标）
@@ -1035,7 +1144,8 @@
                 ml: parseFloat(ml.toFixed(3)),
                 dv: parseFloat(dv.toFixed(3)),
                 rotation: parseFloat(rotation.toFixed(3)),
-                pitch: parseFloat(pitch.toFixed(3))
+                pitch: parseFloat(pitch.toFixed(3)),
+                dep: 0
             });
         };
 
@@ -1193,6 +1303,7 @@
             var dv = parseFloat(_elDv.value);
             var rotation = parseFloat(_elRot.value);
             var pitch = parseFloat(_elPit.value);
+            var dep = parseFloat(_elDep.value);
 
             // Pit 限制在 [0, 90]
             var pitVal = isNaN(pitch) ? 0 : pitch;
@@ -1204,23 +1315,36 @@
                 ml: isNaN(ml) ? 0 : ml,
                 dv: isNaN(dv) ? 0 : dv,
                 rotation: isNaN(rotation) ? 0 : rotation,
-                pitch: pitVal
+                pitch: pitVal,
+                dep: isNaN(dep) ? 0 : dep
             };
         }
 
         // 将位姿值写回 DOM 输入框（使用缓存引用）
-        function _syncPoseToDOM(ap, ml, dv, rotation, pitch) {
+        function _syncPoseToDOM(ap, ml, dv, rotation, pitch, dep) {
             if (_elAp) _elAp.value = ap.toFixed(3);
             if (_elMl) _elMl.value = ml.toFixed(3);
             if (_elDv) _elDv.value = dv.toFixed(3);
             if (_elRot) _elRot.value = rotation.toFixed(3);
             if (_elPit) _elPit.value = pitch.toFixed(3);
+            if (_elDep) _elDep.value = dep.toFixed(3);
+        }
+
+        // 同步更新右下角实时位姿显示面板
+        function _syncPoseToDisplay(ap, ml, dv, rotation, pitch, dep) {
+            var el;
+            el = document.getElementById('disp-rot'); if (el) el.textContent = rotation.toFixed(3);
+            el = document.getElementById('disp-pit'); if (el) el.textContent = pitch.toFixed(3);
+            el = document.getElementById('disp-ap'); if (el) el.textContent = ap.toFixed(3);
+            el = document.getElementById('disp-ml'); if (el) el.textContent = ml.toFixed(3);
+            el = document.getElementById('disp-dv'); if (el) el.textContent = dv.toFixed(3);
+            el = document.getElementById('disp-dep'); if (el) el.textContent = dep.toFixed(3);
         }
 
         // 从 DOM 读取所有值，应用到 3D 定位针
         function _applyPoseFromDOM() {
             var pose = _readPoseFromDOM();
-            window.setNeedlePose(pose.ap, pose.ml, pose.dv, pose.rotation, pose.pitch);
+            window.setNeedlePose(pose.ap, pose.ml, pose.dv, pose.rotation, pose.pitch, pose.dep);
         }
 
         // 【步进按钮】点击时更新输入框并立即应用
@@ -1265,6 +1389,7 @@
             else if (param === 'dv') el = _elDv;
             else if (param === 'rot') el = _elRot;
             else if (param === 'pitch') el = _elPit;
+            else if (param === 'dep') el = _elDep;
             if (!el) return;
 
             var current = parseFloat(el.value);
@@ -1287,6 +1412,19 @@
             }
         }
 
+        // 重置定位针位姿到 Bregma 原点
+        // Rot=0, Pit=90, AP=0, ML=0, DV=0, Dep=0
+        function _resetPoseToBregma() {
+            var D = { rot: 0, pit: 90, ap: 0, ml: 0, dv: 0, dep: 0 };
+            if (_elRot) _elRot.value = D.rot.toFixed(3);
+            if (_elPit) _elPit.value = D.pit.toFixed(3);
+            if (_elAp) _elAp.value = D.ap.toFixed(3);
+            if (_elMl) _elMl.value = D.ml.toFixed(3);
+            if (_elDv) _elDv.value = D.dv.toFixed(3);
+            if (_elDep) _elDep.value = D.dep.toFixed(3);
+            window.setNeedlePose(D.ap, D.ml, D.dv, D.rot, D.pit, D.dep);
+        }
+
         // 模型加载完成后初始化控制面板事件
         function _initPoseBar() {
             // 缓存 DOM 元素
@@ -1295,6 +1433,7 @@
             _elDv = document.getElementById('pose-dv');
             _elRot = document.getElementById('pose-rot');
             _elPit = document.getElementById('pose-pitch');
+            _elDep = document.getElementById('pose-dep');
 
             // 折叠/展开面板（通用 .tl-toggle + [data-target]）
             var toggles = document.querySelectorAll('.tl-toggle');
@@ -1330,20 +1469,22 @@
                 btn.addEventListener('touchend', _onStepBtnUp);
             }
 
-            // 输入框 Enter 键
+            // 输入框 Enter 键 + 禁用自动填充
             var inputs = document.querySelectorAll('.pose-input');
             for (var j = 0; j < inputs.length; j++) {
                 inputs[j].addEventListener('keydown', _onInputKeyDown);
+                inputs[j].setAttribute('autocomplete', 'off');
             }
 
-            // 应用按钮
-            var applyBtn = document.getElementById('pose-apply');
-            if (applyBtn) {
-                applyBtn.addEventListener('click', function (e) {
+            // 重置按钮：定位针回到 Bregma 原点
+            var resetBtn = document.getElementById('pose-reset');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function (e) {
                     e.preventDefault();
-                    _applyPoseFromDOM();
+                    _resetPoseToBregma();
                 });
             }
+
 
             // ---- 复选框：Markers（3D标记球+光环+图例五点列） ----
             var chkMarkers = document.getElementById('chk-markers');
@@ -1366,11 +1507,14 @@
                     if (box) box.style.display = vis ? '' : 'none';
                 });
             }
-            // ---- 复选框：Grid（仅栅格，无图例） ----
+            // ---- 复选框：Grid（3D栅格+图例栅格框） ----
             var chkGrid = document.getElementById('chk-grid');
             if (chkGrid) {
                 chkGrid.addEventListener('change', function () {
-                    if (_gridGroup) _gridGroup.visible = this.checked;
+                    var vis = this.checked;
+                    if (_gridGroup) _gridGroup.visible = vis;
+                    var box = document.getElementById('legend-grid-box');
+                    if (box) box.style.display = vis ? '' : 'none';
                 });
             }
 
